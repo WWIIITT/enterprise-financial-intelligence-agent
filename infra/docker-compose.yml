@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: aurelia-ledger-postgres
+    environment:
+      POSTGRES_DB: aurelia_ledger
+      POSTGRES_USER: aurelia
+      POSTGRES_PASSWORD: aurelia
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.4
+    container_name: aurelia-ledger-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant-data:/qdrant/storage
+
+  redis:
+    image: redis:7
+    container_name: aurelia-ledger-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres-data:
+  qdrant-data:
