@@ -325,6 +325,54 @@ button:disabled {
   font-weight: 700;
 }
 
+.status-refresh {
+  margin-top: 18px;
+}
+
+.status-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #edf1f5;
+}
+
+.status-row span {
+  color: #4f5e70;
+}
+
+.status-row strong {
+  flex: 0 0 auto;
+  min-width: 72px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.status-row .ready {
+  color: #17633b;
+  background: #e7f7ee;
+}
+
+.status-row .missing {
+  color: #9a2f2f;
+  background: #fdecec;
+}
+
+.status-row .optional {
+  color: #70550f;
+  background: #fff5d6;
+}
+
 .body-copy {
   color: #4f5e70;
   line-height: 1.6;

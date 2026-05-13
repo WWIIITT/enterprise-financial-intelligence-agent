@@ -1,4 +1,4 @@
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { Activity, Database, FileSearch, GitBranch, Loader2, PlayCircle, ShieldCheck } from "lucide-react";
 import "./styles.css";
@@ -40,6 +40,16 @@ type IngestResponse = {
   message: string;
 };
 
+type ConfigStatus = {
+  service: string;
+  llm_provider_configured: boolean;
+  database_configured: boolean;
+  qdrant_configured: boolean;
+  redis_configured: boolean;
+  fred_configured: boolean;
+  sec_user_agent_configured: boolean;
+};
+
 const dataSources = ["SEC EDGAR", "FRED", "Internal Policies", "PostgreSQL", "Qdrant"];
 
 const defaultQuestion = "What does the AI Usage Policy say about approved use?";
@@ -49,8 +59,15 @@ function App() {
   const [response, setResponse] = useState<ChatResponse | null>(null);
   const [ingestResults, setIngestResults] = useState<IngestResponse[]>([]);
   const [error, setError] = useState("");
+  const [configStatus, setConfigStatus] = useState<ConfigStatus | null>(null);
+  const [configError, setConfigError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [ingesting, setIngesting] = useState<"policy" | "sec" | null>(null);
+  const [isConfigLoading, setIsConfigLoading] = useState(false);
+
+  useEffect(() => {
+    void loadConfigStatus();
+  }, []);
 
   async function submitQuestion(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -122,6 +139,26 @@ function App() {
     }
   }
 
+  async function loadConfigStatus() {
+    setIsConfigLoading(true);
+    setConfigError("");
+
+    try {
+      const apiResponse = await fetch("/api/config/status");
+      if (!apiResponse.ok) {
+        throw new Error(`Config check failed with status ${apiResponse.status}`);
+      }
+
+      const body = (await apiResponse.json()) as ConfigStatus;
+      setConfigStatus(body);
+    } catch (caughtError) {
+      setConfigStatus(null);
+      setConfigError(caughtError instanceof Error ? caughtError.message : "Unable to load config status.");
+    } finally {
+      setIsConfigLoading(false);
+    }
+  }
+
   const traceSteps = response?.trace ?? [
     { step: "receive", detail: "Waiting for a user question." },
     { step: "route", detail: "The backend will retrieve indexed policy or SEC evidence." },
@@ -139,6 +176,7 @@ function App() {
           <a href="#chat">Chat Console</a>
           <a href="#trace">Agent Trace</a>
           <a href="#sources">Data Sources</a>
+          <a href="#status">System Status</a>
           <a href="#evals">Evaluation</a>
         </nav>
       </aside>
@@ -260,18 +298,45 @@ function App() {
             </dl>
           </article>
 
-          <article className="panel">
+          <article id="status" className="panel">
             <div className="panel-title">
               <ShieldCheck size={20} />
-              <h3>Governance</h3>
+              <h3>System Status</h3>
             </div>
-            <p className="body-copy">
-              Policy RAG, PII masking, prompt-injection checks, audit logs, and architecture documentation are planned for the next phases.
-            </p>
+            <button className="secondary-button status-refresh" type="button" onClick={loadConfigStatus} disabled={isConfigLoading}>
+              {isConfigLoading ? <Loader2 className="spin" size={18} /> : null}
+              Refresh Status
+            </button>
+            {configError ? <p className="error-text">{configError}</p> : null}
+            <div className="status-list">
+              {configStatus ? (
+                <>
+                  <StatusRow label="LLM Provider" ready={configStatus.llm_provider_configured} />
+                  <StatusRow label="PostgreSQL" ready={configStatus.database_configured} />
+                  <StatusRow label="Qdrant" ready={configStatus.qdrant_configured} />
+                  <StatusRow label="Redis" ready={configStatus.redis_configured} />
+                  <StatusRow label="SEC User Agent" ready={configStatus.sec_user_agent_configured} />
+                  <StatusRow label="FRED API" ready={configStatus.fred_configured} optional />
+                </>
+              ) : (
+                <p className="body-copy">Waiting for backend config status.</p>
+              )}
+            </div>
           </article>
         </section>
       </section>
     </main>
+  );
+}
+
+function StatusRow({ label, ready, optional = false }: { label: string; ready: boolean; optional?: boolean }) {
+  return (
+    <div className="status-row">
+      <span>{label}</span>
+      <strong className={ready ? "ready" : optional ? "optional" : "missing"}>
+        {ready ? "Ready" : optional ? "Later" : "Missing"}
+      </strong>
+    </div>
   );
 }
 

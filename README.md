@@ -278,21 +278,24 @@ Use the Chat Console to ask a question. The browser UI calls `/api/chat` through
 
 In the browser:
 
-1. Click `Ingest Policy Docs`.
-2. Click `Ingest SEC Sample`.
-3. Ask:
+1. Check `System Status`.
+2. Confirm LLM Provider, PostgreSQL, Qdrant, Redis, and SEC User Agent are `Ready`.
+3. `FRED API` can show `Later` during Sprint 1.
+4. Click `Ingest Policy Docs`.
+5. Click `Ingest SEC Sample`.
+6. Ask:
 
 ```text
 What does the AI Usage Policy say about approved use?
 ```
 
-4. Click `Apple Risk` or ask:
+7. Click `Apple Risk` or ask:
 
 ```text
 What risks are mentioned for Apple?
 ```
 
-The UI should show the answer, citations, agent trace, latency, source count, and ingestion status. This flow no longer requires manual PowerShell ingestion for the demo.
+The UI should show the answer, citations, agent trace, latency, source count, ingestion status, and system configuration status. This flow no longer requires manual PowerShell ingestion for the demo.
 
 ## API
 
