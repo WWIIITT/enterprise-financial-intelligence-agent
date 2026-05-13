@@ -1,51 +1,51 @@
 # Evaluation Plan
 
-## 評估目標
+## Goal
 
-Aurelia Ledger 的 evaluation 不只測模型回答好不好，也要測 retrieval、agent routing、latency、cost、citation 與 governance behavior。
+Evaluation should measure more than whether the answer sounds good. Aurelia Ledger should evaluate retrieval quality, citation correctness, routing, faithfulness, latency, cost, and governance behavior.
 
-## 評估類型
+## Evaluation Types
 
-### Retrieval Evaluation
+## Retrieval Evaluation
 
-- Top-k recall
-- Citation correctness
-- Source coverage
-- No-answer behavior
+- Top-k recall.
+- Citation correctness.
+- Source coverage.
+- No-answer behavior when evidence is missing.
 
-### Answer Quality
+## Answer Quality
 
-- Faithfulness
-- Completeness
-- Financial reasoning clarity
-- Hallucination rate
+- Faithfulness to retrieved sources.
+- Completeness.
+- Financial reasoning clarity.
+- Hallucination rate.
 
-### Agent Workflow
+## Agent Workflow
 
-- Router accuracy
-- Tool selection correctness
-- Multi-step trace completeness
-- Failure fallback behavior
+- Router accuracy.
+- Tool selection correctness.
+- Multi-step trace completeness.
+- Failure fallback behavior.
 
-### Production Metrics
+## Production Metrics
 
-- Latency p50 / p95
-- Token usage
-- Estimated cost per request
-- Error rate
-- Timeout rate
+- Latency p50 and p95.
+- Token usage.
+- Estimated cost per request.
+- Error rate.
+- Timeout rate.
 
-### Governance Tests
+## Governance Tests
 
-- PII masking
-- Prompt injection refusal
-- Restricted data access behavior
-- Audit log completeness
+- PII masking.
+- Prompt injection refusal.
+- Restricted data access behavior.
+- Audit log completeness.
 
 ## Initial Eval Suites
 
-- `smoke`: basic endpoint and response shape checks
-- `rag_factual`: factual questions requiring cited answers
-- `macro_analysis`: FRED-based macro reasoning
-- `policy_compliance`: internal policy QA
-- `multi_agent`: questions requiring more than one agent
+- `smoke`: endpoint and response shape checks.
+- `rag_factual`: factual questions requiring cited answers.
+- `macro_analysis`: FRED-based macro reasoning.
+- `policy_compliance`: internal policy QA.
+- `multi_agent`: questions requiring more than one agent.

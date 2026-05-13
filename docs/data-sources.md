@@ -4,45 +4,63 @@
 
 Source: https://www.sec.gov/search-filings/edgar-application-programming-interfaces
 
-用途：
+Use cases:
 
-- 公司 filings
-- 10-K / 10-Q
-- Company facts
-- XBRL structured financial data
+- 10-K and 10-Q filings.
+- Annual reports and company announcements.
+- Company Facts API for structured financial metrics.
+- XBRL-derived financial facts.
 
-注意：
+Implementation notes:
 
-- SEC 要求合理的 request rate。
-- `SEC_USER_AGENT` 應填入可識別的姓名與 email。
-- 原始資料放入 `data/raw/`，處理後資料放入 `data/processed/`。
+- `SEC_USER_AGENT` must contain an identifiable name and email.
+- Raw files should be stored under `data/raw/`.
+- Processed files should be stored under `data/processed/`.
+- SEC ingestion should support a local sample fallback for demos.
 
 ## FRED API
 
 Source: https://fred.stlouisfed.org/docs/api/fred/
 
-用途：
+Use cases:
 
-- Interest rates
-- CPI
-- GDP
-- Unemployment rate
-- Yield curve and other macro series
+- Interest rates.
+- CPI.
+- GDP.
+- Unemployment rate.
+- Yield curve and macro risk indicators.
 
-注意：
+Implementation notes:
 
-- 需要 `FRED_API_KEY`。
-- 可先用 cached sample data 開發，再接 live API。
+- Live API access requires `FRED_API_KEY`.
+- MVP can start with cached sample macro data.
+- Later phases should cache series into PostgreSQL for repeatable analysis.
+
+## SEC Company Facts API
+
+Use cases:
+
+- Revenue.
+- Net income.
+- Assets and liabilities.
+- Share count.
+- Industry and company comparisons.
+
+Implementation notes:
+
+- Structured facts should be stored in PostgreSQL.
+- SQL Analytics Agent should query this structured layer rather than raw filings.
 
 ## Internal Policy Documents
 
-Source: self-authored sample documents in `data/policies/`
+Source: self-authored sample documents in `data/policies/`.
 
-用途：
+Use cases:
 
-- AI usage policy
-- Data privacy policy
-- Model risk policy
-- Investment research review policy
+- AI Usage Policy.
+- Investment Research Review Policy.
+- Data Privacy and PII Handling Policy.
+- Model Risk Management Policy.
+- Client Communication Policy.
 
-這些文件用於展示 enterprise RAG、compliance QA、policy-grounded answer 與 AI governance 能力。
+These documents are important for demonstrating enterprise governance, compliance QA, policy-grounded RAG, and auditability.

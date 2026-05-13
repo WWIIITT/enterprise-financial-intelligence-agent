@@ -1,46 +1,52 @@
-# Aurelia Ledger Roadmap
+# Roadmap
 
 ## Phase 1: Skeleton
 
-- FastAPI modular backend
-- React + TypeScript frontend
-- `.env` and `.env.example`
-- Docker Compose for PostgreSQL, Qdrant and Redis
-- Documentation baseline
+- FastAPI modular backend.
+- React + TypeScript frontend.
+- `.env` and `.env.example`.
+- Docker Compose for PostgreSQL, Qdrant, and Redis.
+- Documentation baseline.
+
+Status: mostly complete.
 
 ## Phase 2: RAG MVP
 
-- SEC EDGAR connector
-- Policy document ingestion
-- Chunking strategy
-- Embeddings
-- Qdrant indexing
-- Citation-aware answer generation
+- Policy document ingestion.
+- SEC filing ingestion.
+- Chunking strategy.
+- Embeddings.
+- Qdrant indexing.
+- Citation-aware answer generation.
+- PostgreSQL metadata and request logging.
+
+Status: in progress. Current implementation includes a local in-memory development RAG store. Persistent Qdrant and PostgreSQL integration is next.
 
 ## Phase 3: Agentic Workflow
 
-- LangGraph router
-- Document Research Agent
-- Macro Analysis Agent
-- Policy Compliance Agent
-- SQL Analytics Agent
-- Multi-agent trace in frontend
+- LangGraph router.
+- Document Research Agent.
+- Macro Analysis Agent.
+- Policy Compliance Agent.
+- SQL Analytics Agent.
+- Multi-agent trace in frontend.
 
 ## Phase 4: LLMOps and Reliability
 
-- Evaluation dataset
-- Prompt regression tests
-- Token and cost tracking
-- Latency and error metrics
-- PII masking
-- Prompt injection checks
-- Retry and fallback policies
+- Evaluation dataset.
+- Prompt regression tests.
+- Token and cost tracking.
+- Latency and error metrics.
+- PII masking.
+- Prompt injection checks.
+- Retry and fallback policies.
 
 ## Phase 5: Architect Package
 
-- Architecture diagram
-- Data flow diagram
-- Cost estimate
-- Risk register
-- Security and governance plan
-- Demo script and interview talking points
+- Architecture diagram.
+- Data flow diagram.
+- Cost estimate.
+- Risk register.
+- Security and governance plan.
+- Demo script.
+- Interview talking points.

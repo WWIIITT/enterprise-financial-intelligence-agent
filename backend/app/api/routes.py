@@ -5,11 +5,13 @@ from app.api.schemas import (
     ChatResponse,
     ConfigStatusResponse,
     EvalRunRequest,
+    IngestResponse,
     IngestRequest,
     MacroSeriesResponse,
 )
-from app.services.chat_service import build_placeholder_chat_response
 from app.services.config_service import get_config_status
+from app.services.ingestion_service import ingest_policy_documents, ingest_sec_document
+from app.services.rag_service import build_rag_chat_response
 
 
 router = APIRouter()
@@ -17,7 +19,7 @@ router = APIRouter()
 
 @router.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
-    return build_placeholder_chat_response(request)
+    return build_rag_chat_response(request)
 
 
 @router.get("/config/status", response_model=ConfigStatusResponse)
@@ -25,24 +27,14 @@ def config_status() -> ConfigStatusResponse:
     return get_config_status()
 
 
-@router.post("/ingest/policy")
-def ingest_policy(request: IngestRequest) -> dict[str, str]:
-    return {
-        "status": "accepted",
-        "source_type": "policy",
-        "source": request.source,
-        "message": "Policy ingestion placeholder registered.",
-    }
+@router.post("/ingest/policy", response_model=IngestResponse)
+def ingest_policy(request: IngestRequest) -> IngestResponse:
+    return ingest_policy_documents(request)
 
 
-@router.post("/ingest/sec")
-def ingest_sec(request: IngestRequest) -> dict[str, str]:
-    return {
-        "status": "accepted",
-        "source_type": "sec",
-        "source": request.source,
-        "message": "SEC ingestion placeholder registered.",
-    }
+@router.post("/ingest/sec", response_model=IngestResponse)
+def ingest_sec(request: IngestRequest) -> IngestResponse:
+    return ingest_sec_document(request)
 
 
 @router.get("/macro/series/{series_id}", response_model=MacroSeriesResponse)

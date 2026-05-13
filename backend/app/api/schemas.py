@@ -5,6 +5,7 @@ class Source(BaseModel):
     title: str
     url: str | None = None
     citation: str | None = None
+    source_type: str | None = None
 
 
 class TraceStep(BaseModel):
@@ -44,6 +45,21 @@ class ConfigStatusResponse(BaseModel):
 
 class IngestRequest(BaseModel):
     source: str = Field(..., min_length=1)
+    source_type: str | None = None
+    ticker: str | None = None
+    cik: str | None = None
+    limit: int = Field(default=5, ge=1, le=50)
+    content: str | None = None
+
+
+class IngestResponse(BaseModel):
+    status: str
+    source_type: str
+    source: str
+    documents_indexed: int = 0
+    chunks_indexed: int = 0
+    vector_backend: str
+    message: str
 
 
 class MacroSeriesResponse(BaseModel):
