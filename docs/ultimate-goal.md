@@ -4,11 +4,11 @@
 
 `Enterprise Financial Intelligence Agent Platform` 是一個企業級 AI Agent 平台，結合 RAG、SQL Agent、金融資料分析、宏觀經濟資料、權限控制、LLMOps、監控、成本追蹤與治理文件。
 
-這個專案模擬金融公司內部的 research 與 operations automation platform，目標不是做一個普通 chatbot，而是展示可落地、可監控、可治理的 enterprise AI system。
+這個專案模擬金融公司內部的 research 與 operations automation platform。目標不是普通 chatbot，而是展示可落地、可監控、可治理的 enterprise AI system。
 
 ## Target Role Signal
 
-Senior AI Engineer 和 AI Solution Architect 的能力高度重疊。這個 project 要展示的不只是模型調用，而是完整系統設計與工程落地能力：
+這個 project 目標是同時展示 Senior AI Engineer 與 AI Solution Architect 能力：
 
 - 使用 LLM、RAG、structured data、workflow orchestration 建立實際 AI application。
 - 整合 SEC、FRED、PostgreSQL、Qdrant、internal policy docs 等資料來源。
@@ -27,8 +27,8 @@ Senior AI Engineer 和 AI Solution Architect 的能力高度重疊。這個 proj
 - Ingest financial documents。
 - 對 filing text 做 parsing、chunking、embedding。
 - 從 vector database retrieve relevant passages。
-- 回答問題時必須引用來源。
-- Response 要顯示使用了哪些 documents / chunks。
+- 回答問題時引用來源。
+- Response 顯示使用了哪些 documents / chunks。
 
 ## Macro Analysis Agent
 
@@ -42,12 +42,6 @@ Senior AI Engineer 和 AI Solution Architect 的能力高度重疊。這個 proj
 - GDP。
 - Yield curve indicators。
 
-預期能力：
-
-- 從 FRED API 拉取或 cache macro series。
-- 分析近期趨勢。
-- 將 macro changes 連結到公司 revenue、valuation、risk outlook。
-
 ## SQL Analytics Agent
 
 對 PostgreSQL 裡的 structured financial data 做查詢。
@@ -60,31 +54,17 @@ Senior AI Engineer 和 AI Solution Architect 的能力高度重疊。這個 proj
 - Balance sheet metrics。
 - SEC Company Facts API 轉換後的 financial facts tables。
 
-預期能力：
-
-- 將 user intent 轉成受控 SQL query。
-- 只查詢 approved tables。
-- 用 business language 解釋查詢結果。
-- 避免 unrestricted SQL 或 unsafe query。
-
 ## Policy & Compliance Agent
 
 讀取自製企業政策文件，回答「是否合規」。
 
-政策文件例子：
+政策文件：
 
 - AI Usage Policy。
 - Investment Research Review Policy。
 - Data Privacy and PII Handling Policy。
 - Model Risk Management Policy。
 - Client Communication Policy。
-
-預期能力：
-
-- 判斷某個 workflow 或 user request 是否符合 policy。
-- 引用相關 policy section。
-- 在證據不足時明確表示 uncertainty。
-- 提供 escalation path。
 
 ## Workflow Orchestrator
 
@@ -95,17 +75,10 @@ Senior AI Engineer 和 AI Solution Architect 的能力高度重疊。這個 proj
 - 根據問題決定使用 Document Agent、SQL Agent、Macro Agent、Policy Agent，或多個 agents 合作。
 - 記錄 route decision。
 - 回傳 trace，讓使用者知道系統用了哪些工具和資料。
-- 支援 multi-agent 問題，例如：
-
-```text
-Analyze how rising interest rates may affect Apple's revenue and valuation risk.
-```
 
 ## Evaluation Engine
 
-建立測試集和 scoring scripts，用來衡量系統品質。
-
-評估指標：
+建立測試集和 scoring scripts，用來衡量：
 
 - Retrieval accuracy。
 - Answer faithfulness。
@@ -115,19 +88,9 @@ Analyze how rising interest rates may affect Apple's revenue and valuation risk.
 - Citation correctness。
 - Router accuracy。
 
-預期能力：
-
-- 執行 smoke tests。
-- 執行 RAG factual tests。
-- 執行 policy compliance tests。
-- 執行 macro analysis tests。
-- 產出可以放入 portfolio 的 evaluation report。
-
 ## Observability Dashboard
 
-監控 runtime behavior 和 production signals。
-
-追蹤指標：
+監控 runtime behavior 和 production signals：
 
 - Token usage。
 - Latency。
@@ -136,19 +99,9 @@ Analyze how rising interest rates may affect Apple's revenue and valuation risk.
 - Retrieval score。
 - Cost per request。
 
-可用工具：
-
-- LangSmith。
-- MLflow。
-- Prometheus。
-- Grafana。
-- Custom request logs。
-
 ## Architecture Pack
 
-這是 Level 5 / Solution Architect 定位的重點。
-
-最終交付：
+Solution Architect deliverables：
 
 - Architecture diagram。
 - Data flow diagram。
@@ -162,23 +115,23 @@ Analyze how rising interest rates may affect Apple's revenue and valuation risk.
 
 ## Recommended Tech Stack
 
-## Backend
+Backend：
 
 - Python。
 - FastAPI。
 - Pydantic。
 - SQLAlchemy。
 
-## Agent / LLM
+Agent / LLM：
 
 - LangGraph。
 - LangChain。
 - OpenAI API or Azure OpenAI。
-- OpenAI-compatible third-party provider。
+- OpenAI-compatible provider。
 - Function calling。
 - Structured output。
 
-## RAG
+RAG：
 
 - Qdrant 或 Weaviate。
 - OpenAI embeddings 或 sentence-transformers。
@@ -186,84 +139,42 @@ Analyze how rising interest rates may affect Apple's revenue and valuation risk.
 - Reranking。
 - Citation-aware answer generation。
 
-## Database
+Database：
 
 - PostgreSQL。
 - Redis。
 
-## Data Pipeline
+Data Pipeline：
 
 - Python ETL。
 - pandas。
 - SEC EDGAR API。
 - FRED API。
 
-## Async / Workflow
-
-- Celery 或 RQ。
-- Redis Queue。
-
-## LLMOps
+LLMOps / Monitoring：
 
 - LangSmith 或 MLflow。
-- Custom evaluation scripts。
-- Prompt regression tests。
-
-## Monitoring
-
 - Prometheus。
 - Grafana。
 - OpenTelemetry。
-- Cost logs。
+- Custom evaluation scripts。
 
-## DevOps
+Frontend：
 
-- Docker Compose。
-- GitHub Actions。
-- Optional Kubernetes。
-
-## Frontend
-
-- Streamlit：最快 delivery。
-- React + TypeScript：更強 full-stack signal。
-
-目前這個 repo 使用 React + TypeScript。
+- React + TypeScript。
+- Vite。
 
 ## Data Sources
-
-## 金融文件
 
 SEC EDGAR APIs：
 
 https://www.sec.gov/search-filings/edgar-application-programming-interfaces
 
-用途：
-
-- 10-K。
-- 10-Q。
-- Annual reports。
-- Company announcements。
-- Filing metadata。
-
-## 宏觀經濟資料
-
 FRED API：
 
 https://fred.stlouisfed.org/docs/api/fred/
 
-用途：
-
-- Interest rates。
-- CPI。
-- GDP。
-- Unemployment rate。
-- Yield curve。
-
-## 公司財務 Facts
-
-SEC Company Facts API，同樣來自 SEC EDGAR。
-
-用途：
+SEC Company Facts API：
 
 - Revenue。
 - Net income。
@@ -273,11 +184,7 @@ SEC Company Facts API，同樣來自 SEC EDGAR。
 - Shares。
 - Company comparison。
 
-## 自製企業政策文件
-
-這些 policy docs 很重要，因為它們能展示 enterprise governance、compliance QA、policy-grounded RAG 和 auditability。
-
-建議建立：
+Internal policy documents：
 
 - AI Usage Policy。
 - Investment Research Review Policy。
@@ -309,147 +216,242 @@ Observability Layer
   |-- Cost logs
 ```
 
-## MVP Scope
+## Complete Sprint Roadmap
 
-MVP 不應一開始做太大。目標是先建立穩定的 Senior AI Engineer project，再逐步升級成 Solution Architect portfolio。
+## Sprint 1：Project Skeleton + RAG MVP Foundation
 
-MVP 建議包含：
-
-1. 可 ingest SEC filings。
-2. 可 ingest FRED macro data。
-3. 可 ingest internal policy docs。
-4. 有 Qdrant vector search。
-5. 有 PostgreSQL 儲存 structured financial data。
-6. 有 LangGraph router。
-7. 有 3 個 agents：
-   - Document Agent。
-   - Macro Agent。
-   - Policy Agent。
-8. 有 FastAPI endpoint。
-9. 有 frontend UI。
-10. 有 basic evaluation + request logging。
-
-## Advanced Scope
-
-完成 MVP 後再加入：
-
-1. SQL Analytics Agent。
-2. Role-based access control。
-3. Prompt injection detection。
-4. PII masking。
-5. Cost dashboard。
-6. Latency dashboard。
-7. Model fallback。
-8. Batch evaluation。
-9. Docker Compose 一鍵啟動。
-10. Architecture Pack Markdown / PDF。
-
-這部分會讓專案從 engineering demo 升級成 Level 5 Solution Architect project。
-
-## 2-3 Month Roadmap
-
-## Week 1-2：Project Skeleton
-
-建立 repo structure：
+目標：
 
 ```text
-enterprise-financial-intelligence-agent/
-  backend/
-  frontend/
-  data/
-  docs/
-  evals/
-  infra/
-  notebooks/
+FastAPI + Docker services + basic RAG + citation answer + frontend demo
 ```
 
-完成：
+內容：
 
+- 建立 repo structure：`backend/`, `frontend/`, `data/`, `docs/`, `infra/`。
 - FastAPI skeleton。
-- PostgreSQL。
-- Qdrant。
-- Docker Compose。
-- Basic health check。
-
-## Week 3-4：Data and RAG
-
-完成：
-
-- SEC filing ingestion。
+- React + TypeScript frontend。
+- Docker Compose：PostgreSQL、Qdrant、Redis。
+- `.env` config。
 - Policy document ingestion。
-- Chunking。
-- Embeddings。
-- Qdrant indexing。
-- RAG answer with citation。
+- SEC sample ingestion。
+- Basic chunking。
+- Qdrant indexing fallback。
+- In-memory dev RAG fallback。
+- `/api/chat`。
+- Citation-shaped answer。
+- Browser demo UI。
+- System status panel。
+- Request trace / metrics placeholder。
 
-練習：
+目前狀態：
 
-- 比較 chunk size。
-- 比較 embedding model。
-- 比較 top-k。
-- 比較 reranking 對答案品質的影響。
+```text
+大部分已完成。Demo-grade RAG 已可用。
+```
 
-## Week 5-6：Agentic Workflow
+## Sprint 2：Production-Grade RAG
 
-完成：
+目標：
+
+```text
+real embeddings + persistent Qdrant + cleaner retrieval + better citations
+```
+
+內容：
+
+- 加入 real embedding client。
+- 用正式 embedding vector 取代 hash embedding。
+- Qdrant 成為主要 retrieval backend。
+- PostgreSQL 儲存 document metadata、chunk metadata、request logs。
+- 改善 chunking strategy。
+- 改善 citation format。
+- 加入 reranking。
+- 加入 no-answer behavior。
+- 加入 better answer synthesis。
+
+目前狀態：
+
+```text
+下一個 development stage。
+```
+
+## Sprint 3：SEC EDGAR Live Ingestion
+
+目標：
+
+```text
+real SEC filing ingestion
+```
+
+內容：
+
+- 用 SEC EDGAR API 抓 filings。
+- 支援 ticker / CIK lookup。
+- 抓 10-K / 10-Q。
+- 儲存 raw filing 到 `data/raw/`。
+- Parser 清理 filing text。
+- Chunk + embed + index。
+- 回答時引用 SEC source。
+
+目前狀態：
+
+```text
+尚未開始。目前只有 SEC sample ingestion。
+```
+
+## Sprint 4：Macro Analysis Agent
+
+目標：
+
+```text
+FRED macro data analysis
+```
+
+內容：
+
+- FRED API connector。
+- 拉取 CPI、GDP、unemployment、interest rates。
+- Cache macro series。
+- 生成 macro summary。
+- 支援 macro + company risk 問題。
+
+目前狀態：
+
+```text
+尚未開始。
+```
+
+## Sprint 5：LangGraph Workflow Orchestrator
+
+目標：
+
+```text
+agent routing
+```
+
+內容：
 
 - LangGraph router。
-- Document Agent。
-- Macro Agent。
-- Policy Agent。
-- Multi-step answer generation。
+- Document Research Agent。
+- Policy Compliance Agent。
+- Macro Analysis Agent。
+- 後續加入 SQL Analytics Agent。
+- Response 顯示 selected route。
+- Multi-agent trace。
 
-練習：
-
-- 讓一個問題可以同時查 SEC 文件與 FRED 數據。
-- Example：
+目前狀態：
 
 ```text
-Analyze how rising interest rates may affect Apple's revenue and valuation risk.
+尚未開始。目前只有 simple RAG orchestrator。
 ```
 
-## Week 7-8：Production Engineering
+## Sprint 6：SQL Analytics Agent
 
-完成：
+目標：
 
-- Request logging。
-- Error handling。
-- Retry。
-- Timeout。
-- Model fallback。
-- PII masking。
-- Basic RBAC。
+```text
+structured financial data analytics
+```
 
-練習：
+內容：
 
-- Bad input。
-- Prompt injection。
-- Very long documents。
-- API failure。
+- PostgreSQL financial facts schema。
+- SEC Company Facts ingestion。
+- SQL query tool。
+- Safe SQL generation。
+- Financial metrics analysis。
+- Company / sector comparison。
 
-## Week 9-10：LLMOps / Evaluation
+目前狀態：
 
-完成：
+```text
+尚未開始。
+```
 
-- Evaluation dataset。
-- Retrieval score。
+## Sprint 7：LLMOps / Evaluation
+
+目標：
+
+```text
+evaluation + quality measurement
+```
+
+內容：
+
+- Eval dataset。
+- Retrieval recall。
+- Citation correctness。
 - Faithfulness score。
+- Hallucination checks。
+- Latency tracking。
+- Token / cost tracking。
+- Batch eval report。
+
+目前狀態：
+
+```text
+只有 evaluation plan 文件，engine 尚未實作。
+```
+
+## Sprint 8：Security / Governance / Reliability
+
+目標：
+
+```text
+enterprise controls
+```
+
+內容：
+
+- PII masking。
+- Prompt injection detection。
+- RBAC。
+- Audit logs。
+- Retry / timeout。
+- Model fallback。
+- Data retention policy。
+- Human approval path。
+
+目前狀態：
+
+```text
+Enterprise policy docs 已建立，runtime controls 尚未實作。
+```
+
+## Sprint 9：Observability Dashboard
+
+目標：
+
+```text
+monitoring dashboard
+```
+
+內容：
+
+- Token usage。
 - Latency。
-- Token cost。
-- LangSmith / MLflow logging。
+- Error rate。
+- Agent route。
+- Retrieval score。
+- Cost per request。
+- Prometheus / Grafana or custom UI。
 
-練習：
+目前狀態：
 
-- 建立 50-100 條 evaluation questions。
-- 分成：
-  - factual。
-  - analytical。
-  - compliance。
-  - multi-agent。
+```text
+Frontend 只有 basic metrics placeholder。
+```
 
-## Week 11-12：Architect Deliverables
+## Sprint 10：Architecture Pack / Portfolio Polish
 
-完成：
+目標：
+
+```text
+Solution Architect deliverables
+```
+
+內容：
 
 - Architecture diagram。
 - Data flow diagram。
@@ -457,55 +459,87 @@ Analyze how rising interest rates may affect Apple's revenue and valuation risk.
 - Cost estimate。
 - Risk register。
 - Deployment roadmap。
-- README。
+- Evaluation report。
 - Demo script。
+- Interview talking points。
 
-這一階段最重要，因為它會讓 project 從工程 demo 升級成 Solution Architect portfolio。
-
-## Final Deliverables
-
-最後應該有：
-
-1. GitHub Repo。
-2. Live 或 local demo。
-3. README。
-4. Architecture Document。
-5. API documentation。
-6. Evaluation Report。
-7. Cost & Latency Report。
-8. Security & Governance Document。
-9. 5-8 分鐘 Demo Video script。
-10. Interview talking points。
-
-## Interview Selling Points
-
-最能打動面試官的功能：
-
-1. 問題回答有引用來源。
-2. Agent 會自動選工具。
-3. 回答會顯示用了哪些資料。
-4. 有 evaluation report。
-5. 有 token / cost / latency dashboard。
-6. 有 prompt injection / PII protection。
-7. 有 architecture diagram。
-8. 有 business value explanation。
-
-## Sprint 1 Priority
-
-第一個 Sprint 建議：
+目前狀態：
 
 ```text
-FastAPI + Qdrant + PostgreSQL + SEC ingestion + basic RAG answer
+已有初版 docs，還未完成 full architecture pack。
 ```
 
-先不要做 complex agent orchestration。
+## Current Progress
 
-先打穩基礎：
+目前完成度：
 
-- Data ingestion。
-- Retrieval。
-- Citations。
-- Stable answer format。
-- Basic request logging。
+```text
+Sprint 1：80-90% completed
+Sprint 2：準備開始
+```
 
-Sprint 1 完成後，再加 LangGraph routing。這樣 project 會比較穩，不會一開始就在 agent orchestration 裡卡住。
+已完成：
+
+- FastAPI backend skeleton。
+- React + TypeScript frontend。
+- Docker Compose services。
+- PostgreSQL / Qdrant / Redis local setup。
+- `.env` config loading。
+- `/health`。
+- `/api/config/status`。
+- `/api/ingest/policy`。
+- `/api/ingest/sec`。
+- `/api/chat`。
+- Policy docs ingestion。
+- SEC sample ingestion。
+- Basic local RAG。
+- Qdrant indexing when available。
+- In-memory fallback。
+- Citation-shaped response。
+- Markdown-like answer rendering。
+- Agent trace。
+- Metrics placeholder。
+- Browser UI chat console。
+- Browser ingestion buttons。
+- System status panel。
+- Improved responsive layout。
+- Enterprise-style policy documents。
+- README running process。
+- Ultimate goal / roadmap / architecture docs。
+- Backend tests passing。
+- Frontend build passing。
+
+目前所在階段：
+
+```text
+Phase 2：RAG MVP
+Stage：basic RAG demo 已可用，準備升級成 production-grade RAG
+```
+
+更精準地說：
+
+```text
+已完成 demo-grade RAG
+下一步是做 production-grade retrieval
+```
+
+## Next Development Step
+
+下一個最值得做的 task：
+
+```text
+Implement real embedding-based Qdrant retrieval
+```
+
+具體工作：
+
+1. 加入 embedding client。
+2. 如果 provider 有 embedding model，就用 provider。
+3. 如果 provider 沒有 embedding model，就用 local `sentence-transformers`。
+4. 把目前 hash embedding 換成 real embeddings。
+5. Qdrant collection 改成依 embedding dimension 建立。
+6. Ingestion 時：chunk text -> embed -> store vectors in Qdrant -> store metadata in PostgreSQL。
+7. Chat 時：embed query -> Qdrant vector search -> rerank top results -> compose answer with clean citations。
+8. 改善 no-answer behavior：如果 retrieved score 太低，就回答沒有足夠 evidence，不要硬湊答案。
+
+這一步做完，project 會從「可展示 demo」升級成「真正 RAG system foundation」。
