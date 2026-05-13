@@ -1,6 +1,6 @@
 import React, { FormEvent, useState } from "react";
 import ReactDOM from "react-dom/client";
-import { Activity, Database, FileSearch, GitBranch, Loader2, ShieldCheck } from "lucide-react";
+import { Activity, Database, FileSearch, GitBranch, Loader2, PlayCircle, ShieldCheck } from "lucide-react";
 import "./styles.css";
 
 type Source = {
@@ -30,6 +30,16 @@ type ChatResponse = {
   metrics: Metrics;
 };
 
+type IngestResponse = {
+  status: string;
+  source_type: string;
+  source: string;
+  documents_indexed: number;
+  chunks_indexed: number;
+  vector_backend: string;
+  message: string;
+};
+
 const dataSources = ["SEC EDGAR", "FRED", "Internal Policies", "PostgreSQL", "Qdrant"];
 
 const defaultQuestion = "What does the AI Usage Policy say about approved use?";
@@ -37,8 +47,10 @@ const defaultQuestion = "What does the AI Usage Policy say about approved use?";
 function App() {
   const [question, setQuestion] = useState(defaultQuestion);
   const [response, setResponse] = useState<ChatResponse | null>(null);
+  const [ingestResults, setIngestResults] = useState<IngestResponse[]>([]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [ingesting, setIngesting] = useState<"policy" | "sec" | null>(null);
 
   async function submitQuestion(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -69,6 +81,44 @@ function App() {
       setError(caughtError instanceof Error ? caughtError.message : "Unable to reach the API.");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function ingestPolicyDocs() {
+    await runIngestion("policy", "/api/ingest/policy", { source: "all" });
+  }
+
+  async function ingestSecSample() {
+    await runIngestion("sec", "/api/ingest/sec", {
+      source: "sample-sec-inline",
+      ticker: "AAPL",
+      content:
+        "Apple reports revenue risk from foreign exchange, interest rates, product demand, supply chain constraints, and macroeconomic uncertainty."
+    });
+    setQuestion("What risks are mentioned for Apple?");
+  }
+
+  async function runIngestion(kind: "policy" | "sec", endpoint: string, payload: object) {
+    setIngesting(kind);
+    setError("");
+
+    try {
+      const apiResponse = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!apiResponse.ok) {
+        throw new Error(`Ingestion failed with status ${apiResponse.status}`);
+      }
+
+      const body = (await apiResponse.json()) as IngestResponse;
+      setIngestResults((currentResults) => [body, ...currentResults.filter((item) => item.source_type !== body.source_type)]);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Unable to run ingestion.");
+    } finally {
+      setIngesting(null);
     }
   }
 
@@ -158,6 +208,27 @@ function App() {
               <Database size={20} />
               <h3>Data Sources</h3>
             </div>
+            <div className="button-row compact-row">
+              <button className="secondary-button" type="button" onClick={ingestPolicyDocs} disabled={ingesting !== null}>
+                {ingesting === "policy" ? <Loader2 className="spin" size={18} /> : <PlayCircle size={18} />}
+                Ingest Policy Docs
+              </button>
+              <button className="secondary-button" type="button" onClick={ingestSecSample} disabled={ingesting !== null}>
+                {ingesting === "sec" ? <Loader2 className="spin" size={18} /> : <PlayCircle size={18} />}
+                Ingest SEC Sample
+              </button>
+            </div>
+            {ingestResults.length ? (
+              <div className="ingest-list">
+                {ingestResults.map((result) => (
+                  <div className="ingest-item" key={`${result.source_type}-${result.source}`}>
+                    <strong>{result.source_type}</strong>
+                    <span>{result.documents_indexed} docs / {result.chunks_indexed} chunks</span>
+                    <small>{result.vector_backend}</small>
+                  </div>
+                ))}
+              </div>
+            ) : null}
             {response?.sources.length ? (
               <div className="citation-list">
                 {response.sources.map((source, index) => (

@@ -206,7 +206,7 @@ Invoke-RestMethod http://localhost:8000/health
 Invoke-RestMethod http://localhost:8000/api/config/status
 ```
 
-### 6. Ingest policy documents
+### 6. Optional API test: ingest policy documents
 
 ```powershell
 Invoke-RestMethod -Method Post http://localhost:8000/api/ingest/policy `
@@ -224,7 +224,7 @@ chunks_indexed    : 3
 vector_backend    : qdrant+in-memory
 ```
 
-### 7. Ingest sample SEC content
+### 7. Optional API test: ingest sample SEC content
 
 ```powershell
 Invoke-RestMethod -Method Post http://localhost:8000/api/ingest/sec `
@@ -232,7 +232,7 @@ Invoke-RestMethod -Method Post http://localhost:8000/api/ingest/sec `
   -Body '{"source":"sample-sec-inline","ticker":"AAPL","content":"Apple reports revenue risk from foreign exchange, interest rates, product demand, supply chain constraints, and macroeconomic uncertainty."}'
 ```
 
-### 8. Test RAG chat from PowerShell
+### 8. Optional API test: RAG chat from PowerShell
 
 ```powershell
 Invoke-RestMethod -Method Post http://localhost:8000/api/chat `
@@ -273,6 +273,26 @@ http://localhost:5173
 ```
 
 Use the Chat Console to ask a question. The browser UI calls `/api/chat` through the Vite proxy and displays the answer, sources, trace, and latency metrics.
+
+### 10. Browser demo flow
+
+In the browser:
+
+1. Click `Ingest Policy Docs`.
+2. Click `Ingest SEC Sample`.
+3. Ask:
+
+```text
+What does the AI Usage Policy say about approved use?
+```
+
+4. Click `Apple Risk` or ask:
+
+```text
+What risks are mentioned for Apple?
+```
+
+The UI should show the answer, citations, agent trace, latency, source count, and ingestion status. This flow no longer requires manual PowerShell ingestion for the demo.
 
 ## API
 

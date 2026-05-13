@@ -167,6 +167,10 @@ button:disabled {
   gap: 10px;
 }
 
+.compact-row {
+  margin-top: 18px;
+}
+
 .secondary-button {
   border: 1px solid #ccd7e2;
   color: #243449;
@@ -229,6 +233,37 @@ button:disabled {
   color: #243449;
   font-size: 13px;
   font-weight: 700;
+}
+
+.ingest-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.ingest-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid #d7e7ee;
+  border-radius: 8px;
+  background: #f3fbfd;
+}
+
+.ingest-item strong {
+  color: #0f5f75;
+  text-transform: uppercase;
+}
+
+.ingest-item span {
+  color: #243449;
+  font-weight: 700;
+}
+
+.ingest-item small {
+  color: #6d7d8f;
 }
 
 .citation-list {
@@ -311,6 +346,10 @@ button:disabled {
   .topbar {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .ingest-item {
+    grid-template-columns: 1fr;
   }
 }
 
