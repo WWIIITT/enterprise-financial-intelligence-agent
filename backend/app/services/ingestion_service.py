@@ -30,6 +30,8 @@ def ingest_policy_documents(request: IngestRequest) -> IngestResponse:
                 )
             )
 
+    rag_store.delete_by_source_type("policy")
+    qdrant_vector_store.delete_by_source_type("policy")
     indexed = rag_store.upsert(stored_chunks)
     qdrant_enabled = qdrant_vector_store.upsert(stored_chunks)
     if files:
@@ -61,6 +63,8 @@ def ingest_sec_document(request: IngestRequest) -> IngestResponse:
         for chunk in chunk_text(text)
     ]
 
+    rag_store.delete_by_source_type("sec")
+    qdrant_vector_store.delete_by_source_type("sec")
     indexed = rag_store.upsert(stored_chunks)
     qdrant_enabled = qdrant_vector_store.upsert(stored_chunks)
     record_ingested_chunks("sec", request.source, f"SEC Filing: {title}", stored_chunks)

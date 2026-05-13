@@ -31,6 +31,7 @@ def test_policy_ingestion_indexes_local_documents() -> None:
     assert chat_response.status_code == 200
     assert chat_body["sources"]
     assert chat_body["metrics"]["latency_ms"] >= 0
+    assert "placeholder for policy RAG development" not in chat_body["answer"]
 
 
 def test_sec_ingestion_accepts_inline_content() -> None:

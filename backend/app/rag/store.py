@@ -27,6 +27,12 @@ class InMemoryRagStore:
             self._chunks[chunk.id] = chunk
         return len(chunks)
 
+    def delete_by_source_type(self, source_type: str) -> int:
+        ids_to_delete = [chunk_id for chunk_id, chunk in self._chunks.items() if chunk.source_type == source_type]
+        for chunk_id in ids_to_delete:
+            del self._chunks[chunk_id]
+        return len(ids_to_delete)
+
     def search(self, query: str, limit: int = 5) -> list[StoredChunk]:
         return rank_chunks(query, list(self._chunks.values()), limit)
 

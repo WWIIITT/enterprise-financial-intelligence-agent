@@ -221,7 +221,7 @@ function App() {
             {response ? (
               <section className="answer-block" aria-live="polite">
                 <p className="eyebrow">Answer</p>
-                <p>{response.answer}</p>
+                <FormattedAnswer answer={response.answer} />
               </section>
             ) : null}
           </article>
@@ -327,6 +327,86 @@ function App() {
       </section>
     </main>
   );
+}
+
+function FormattedAnswer({ answer }: { answer: string }) {
+  const blocks = parseAnswerBlocks(answer);
+
+  return (
+    <div className="formatted-answer">
+      {blocks.map((block, index) => {
+        if (block.type === "heading") {
+          return <h4 key={`${block.content}-${index}`}>{block.content}</h4>;
+        }
+        if (block.type === "list") {
+          return (
+            <ul key={`${block.items.join("-")}-${index}`}>
+              {block.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          );
+        }
+        return <p key={`${block.content}-${index}`}>{block.content}</p>;
+      })}
+    </div>
+  );
+}
+
+type AnswerBlock =
+  | { type: "heading"; content: string }
+  | { type: "paragraph"; content: string }
+  | { type: "list"; items: string[] };
+
+function parseAnswerBlocks(answer: string): AnswerBlock[] {
+  const lines = answer.split(/\r?\n/);
+  const blocks: AnswerBlock[] = [];
+  let paragraphLines: string[] = [];
+  let listItems: string[] = [];
+
+  function flushParagraph() {
+    if (paragraphLines.length) {
+      blocks.push({ type: "paragraph", content: paragraphLines.join(" ").trim() });
+      paragraphLines = [];
+    }
+  }
+
+  function flushList() {
+    if (listItems.length) {
+      blocks.push({ type: "list", items: listItems });
+      listItems = [];
+    }
+  }
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) {
+      flushParagraph();
+      flushList();
+      continue;
+    }
+
+    if (line.startsWith("## ")) {
+      flushParagraph();
+      flushList();
+      blocks.push({ type: "heading", content: line.replace(/^##\s+/, "") });
+      continue;
+    }
+
+    if (line.startsWith("- ")) {
+      flushParagraph();
+      listItems.push(line.replace(/^-\s+/, ""));
+      continue;
+    }
+
+    flushList();
+    paragraphLines.push(line);
+  }
+
+  flushParagraph();
+  flushList();
+
+  return blocks.length ? blocks : [{ type: "paragraph", content: answer }];
 }
 
 function StatusRow({ label, ready, optional = false }: { label: string; ready: boolean; optional?: boolean }) {

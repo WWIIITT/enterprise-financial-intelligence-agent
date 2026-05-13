@@ -3,7 +3,7 @@ from __future__ import annotations
 from hashlib import blake2b
 
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import Distance, PointStruct, VectorParams
+from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchValue, PointStruct, VectorParams
 
 from app.core.config import settings
 from app.core.network import can_open_tcp_connection
@@ -48,6 +48,32 @@ class QdrantVectorStore:
                     )
                     for chunk in chunks
                 ],
+            )
+        except Exception:
+            return False
+
+        return True
+
+    def delete_by_source_type(self, source_type: str) -> bool:
+        if not self.available():
+            return False
+
+        client = self._get_client()
+        if client is None:
+            return False
+
+        try:
+            self._ensure_collection(client)
+            client.delete(
+                collection_name=COLLECTION_NAME,
+                points_selector=Filter(
+                    must=[
+                        FieldCondition(
+                            key="source_type",
+                            match=MatchValue(value=source_type),
+                        )
+                    ]
+                ),
             )
         except Exception:
             return False

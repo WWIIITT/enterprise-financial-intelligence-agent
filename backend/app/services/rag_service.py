@@ -64,10 +64,30 @@ def _select_agent(chunks) -> str:
 
 
 def _compose_grounded_answer(question: str, chunks) -> str:
-    evidence = " ".join(chunk.text for chunk in chunks[:3])
-    excerpt = evidence[:900]
-    citations = ", ".join(chunk.citation for chunk in chunks[:3])
+    evidence_items = [f"- {_clean_evidence_text(chunk.text)[:420]}" for chunk in chunks[:3]]
+    citations = "\n".join(f"- {chunk.citation}" for chunk in chunks[:3])
     return (
-        f"Based on the indexed sources, the relevant evidence for '{question}' is: {excerpt} "
-        f"Sources: {citations}."
+        f"## Summary\n"
+        f"Based on the indexed sources, the relevant evidence for '{question}' is shown below.\n\n"
+        f"## Evidence\n"
+        f"{chr(10).join(evidence_items)}\n\n"
+        f"## Sources\n"
+        f"{citations}"
     )
+
+
+def _clean_evidence_text(text: str) -> str:
+    cleaned_lines: list[str] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        line = line.lstrip("#").strip()
+        if line.startswith("- "):
+            line = line[2:].strip()
+        cleaned_lines.append(line)
+
+    cleaned = " ".join(cleaned_lines) if cleaned_lines else text
+    cleaned = cleaned.replace(" ## ", ". ").replace(" # ", ". ")
+    cleaned = cleaned.replace(" - ", "; ")
+    return " ".join(cleaned.split())
