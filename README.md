@@ -219,8 +219,8 @@ Expected result:
 ```text
 status            : completed
 source_type       : policy
-documents_indexed : 3
-chunks_indexed    : 3
+documents_indexed : 5
+chunks_indexed    : greater than 5
 vector_backend    : qdrant+in-memory
 ```
 

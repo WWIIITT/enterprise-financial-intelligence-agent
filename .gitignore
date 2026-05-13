@@ -32,6 +32,8 @@ pnpm-debug.log*
 *.log
 logs/
 *.pid
+frontend/layout-*.png
+frontend/layout-check-*.png
 
 # Local data artifacts
 data/raw/*

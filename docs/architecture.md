@@ -37,7 +37,7 @@ The repo currently implements the first development foundation:
 - FastAPI API shell.
 - React + TypeScript frontend shell.
 - Docker Compose for PostgreSQL, Qdrant, and Redis.
-- Local policy documents.
+- Five enterprise-style internal policy documents.
 - In-memory development RAG store for ingestion and citation-shaped chat responses.
 
 The in-memory store is intentionally temporary. It lets the API and frontend workflow be tested before persistent Qdrant and PostgreSQL integration is completed.

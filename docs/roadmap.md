@@ -20,7 +20,7 @@ Status: mostly complete.
 - Citation-aware answer generation.
 - PostgreSQL metadata and request logging.
 
-Status: in progress. Current implementation includes a local in-memory development RAG store. Persistent Qdrant and PostgreSQL integration is next.
+Status: in progress. Current implementation includes browser-triggered ingestion, enterprise-style policy documents, Qdrant-backed indexing when available, and a local in-memory development RAG fallback. Production-grade embeddings and live SEC ingestion are next.
 
 ## Phase 3: Agentic Workflow
 
