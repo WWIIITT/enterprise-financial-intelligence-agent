@@ -64,6 +64,12 @@ python -m pip install --upgrade pip
 python -m pip install -r backend\requirements.txt
 ```
 
+After activation, your terminal should show `(.venv)` before the prompt. To leave the virtual environment:
+
+```powershell
+deactivate
+```
+
 Create `.env` from `.env.example` and fill in local values:
 
 ```env
@@ -77,6 +83,28 @@ REDIS_URL=redis://localhost:6379/0
 FRED_API_KEY=
 SEC_USER_AGENT=your-name your-email@example.com
 ```
+
+Environment variable reference:
+
+| Variable | Required now | Purpose |
+| --- | --- | --- |
+| `LLM_API_KEY` | Yes | API key for your OpenAI-compatible LLM provider. |
+| `LLM_BASE_URL` | Yes | Base URL for the LLM provider, usually ending in `/v1`. |
+| `LLM_MODEL` | Yes | Chat model used for answer generation. |
+| `EMBEDDING_MODEL` | Not yet | Embedding model for production vector search. Current local RAG can run without it because it uses a development fallback. |
+| `DATABASE_URL` | Yes | PostgreSQL connection string for metadata, chunks, and request logs. |
+| `QDRANT_URL` | Yes | Qdrant vector database URL. |
+| `REDIS_URL` | Later | Redis connection string for future queue/cache workflows. |
+| `FRED_API_KEY` | Later | FRED API key for macroeconomic data ingestion. |
+| `SEC_USER_AGENT` | Yes before live SEC ingestion | Identifiable SEC EDGAR user agent, normally `your-name your-email@example.com`. |
+
+If you do not have an embedding model yet, leave `EMBEDDING_MODEL` empty for now:
+
+```env
+EMBEDDING_MODEL=
+```
+
+The current Sprint 1 development flow still works because local retrieval has a fallback path. Before production-grade Qdrant retrieval, choose an embedding model from your provider, for example an OpenAI-compatible embedding model such as `text-embedding-3-small` if your provider supports it.
 
 Start infrastructure:
 
@@ -110,6 +138,141 @@ Frontend URL:
 ```text
 http://localhost:5173
 ```
+
+## Run The Project End To End
+
+Use PowerShell from the repo root.
+
+### 1. Start Docker services
+
+```powershell
+docker compose -f infra\docker-compose.yml up -d
+docker ps
+```
+
+Expected containers:
+
+```text
+aurelia-ledger-postgres
+aurelia-ledger-qdrant
+aurelia-ledger-redis
+```
+
+### 2. Activate Python environment
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+If dependencies are missing:
+
+```powershell
+python -m pip install -r backend\requirements.txt
+```
+
+### 3. Run backend tests
+
+```powershell
+python -m pytest
+```
+
+Expected result:
+
+```text
+5 passed
+```
+
+### 4. Start FastAPI backend
+
+Keep this terminal open:
+
+```powershell
+cd backend
+..\.venv\Scripts\python -m uvicorn app.main:app --reload
+```
+
+Backend URL:
+
+```text
+http://localhost:8000
+```
+
+### 5. Verify backend from a second terminal
+
+Open a second PowerShell terminal from the repo root:
+
+```powershell
+Invoke-RestMethod http://localhost:8000/health
+Invoke-RestMethod http://localhost:8000/api/config/status
+```
+
+### 6. Ingest policy documents
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/ingest/policy `
+  -ContentType "application/json" `
+  -Body '{"source":"all"}'
+```
+
+Expected result:
+
+```text
+status            : completed
+source_type       : policy
+documents_indexed : 3
+chunks_indexed    : 3
+vector_backend    : qdrant+in-memory
+```
+
+### 7. Ingest sample SEC content
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/ingest/sec `
+  -ContentType "application/json" `
+  -Body '{"source":"sample-sec-inline","ticker":"AAPL","content":"Apple reports revenue risk from foreign exchange, interest rates, product demand, supply chain constraints, and macroeconomic uncertainty."}'
+```
+
+### 8. Test RAG chat from PowerShell
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/chat `
+  -ContentType "application/json" `
+  -Body '{"message":"What does the AI Usage Policy say about approved use?"}'
+```
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/chat `
+  -ContentType "application/json" `
+  -Body '{"message":"What risks are mentioned for Apple?"}'
+```
+
+The response should include:
+
+```text
+answer
+agent
+sources
+trace
+metrics
+```
+
+### 9. Start frontend
+
+Open a third PowerShell terminal:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Open:
+
+```text
+http://localhost:5173
+```
+
+Use the Chat Console to ask a question. The browser UI calls `/api/chat` through the Vite proxy and displays the answer, sources, trace, and latency metrics.
 
 ## API
 

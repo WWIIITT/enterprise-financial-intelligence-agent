@@ -49,3 +49,9 @@ def test_sec_ingestion_accepts_inline_content() -> None:
     assert body["source_type"] == "sec"
     assert body["documents_indexed"] == 1
     assert body["chunks_indexed"] >= 1
+
+    chat_response = client.post("/api/chat", json={"message": "What risks are mentioned for Apple?"})
+    chat_body = chat_response.json()
+
+    assert chat_response.status_code == 200
+    assert chat_body["sources"][0]["source_type"] == "sec"

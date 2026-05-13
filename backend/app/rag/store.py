@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import dataclass
 from hashlib import sha256
 from uuid import UUID
@@ -27,22 +28,7 @@ class InMemoryRagStore:
         return len(chunks)
 
     def search(self, query: str, limit: int = 5) -> list[StoredChunk]:
-        query_terms = _terms(query)
-        if not query_terms:
-            return []
-
-        scored: list[tuple[float, StoredChunk]] = []
-        for chunk in self._chunks.values():
-            text_terms = _terms(f"{chunk.title} {chunk.text}")
-            if not text_terms:
-                continue
-            overlap = query_terms.intersection(text_terms)
-            score = len(overlap) / math.sqrt(len(text_terms))
-            if score > 0:
-                scored.append((score, chunk))
-
-        scored.sort(key=lambda item: item[0], reverse=True)
-        return [chunk for _, chunk in scored[:limit]]
+        return rank_chunks(query, list(self._chunks.values()), limit)
 
     def count(self) -> int:
         return len(self._chunks)
@@ -54,7 +40,38 @@ def stable_chunk_id(source_type: str, source: str, chunk_index: int, text: str) 
 
 
 def _terms(value: str) -> set[str]:
-    return {term.lower() for term in value.replace("/", " ").replace("-", " ").split() if len(term) > 2}
+    return {term.lower() for term in re.findall(r"[a-zA-Z0-9]+", value) if len(term) > 2}
+
+
+def rank_chunks(query: str, chunks: list[StoredChunk], limit: int = 5) -> list[StoredChunk]:
+    query_terms = _terms(query)
+    if not query_terms:
+        return []
+
+    scored: list[tuple[float, StoredChunk]] = []
+    for chunk in chunks:
+        text_terms = _terms(f"{chunk.title} {chunk.text}")
+        if not text_terms:
+            continue
+        overlap = query_terms.intersection(text_terms)
+        score = len(overlap) / math.sqrt(len(text_terms))
+        score += _source_intent_boost(query_terms, chunk)
+        if score > 0:
+            scored.append((score, chunk))
+
+    scored.sort(key=lambda item: item[0], reverse=True)
+    return [chunk for _, chunk in scored[:limit]]
+
+
+def _source_intent_boost(query_terms: set[str], chunk: StoredChunk) -> float:
+    sec_terms = {"apple", "aapl", "filing", "revenue", "risk", "risks", "interest", "rates", "demand"}
+    policy_terms = {"policy", "privacy", "pii", "compliance", "approved", "prohibited", "governance"}
+
+    if chunk.source_type == "sec" and query_terms.intersection(sec_terms):
+        return 3.0
+    if chunk.source_type == "policy" and query_terms.intersection(policy_terms):
+        return 1.2
+    return 0.0
 
 
 rag_store = InMemoryRagStore()

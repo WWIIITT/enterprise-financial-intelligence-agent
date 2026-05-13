@@ -126,10 +126,14 @@ textarea {
   font-size: 17px;
 }
 
+form {
+  margin-top: 18px;
+}
+
 textarea {
   width: 100%;
   min-height: 210px;
-  margin: 18px 0 14px;
+  margin: 0 0 14px;
   padding: 14px;
   border: 1px solid #ccd7e2;
   border-radius: 8px;
@@ -138,6 +142,10 @@ textarea {
 }
 
 button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-height: 42px;
   padding: 0 16px;
   border: 0;
@@ -148,11 +156,63 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.secondary-button {
+  border: 1px solid #ccd7e2;
+  color: #243449;
+  background: #ffffff;
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+.error-text {
+  margin: 14px 0 0;
+  color: #a13232;
+  font-weight: 700;
+}
+
+.answer-block {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #edf1f5;
+}
+
+.answer-block p:last-child {
+  margin: 8px 0 0;
+  color: #243449;
+  line-height: 1.65;
+}
+
 .trace-list {
   display: grid;
   gap: 12px;
   margin: 18px 0 0;
   padding-left: 22px;
+}
+
+.trace-list li strong {
+  display: block;
+  color: #243449;
+  text-transform: capitalize;
+}
+
+.trace-list li span {
+  display: block;
+  margin-top: 2px;
+  color: #4f5e70;
+  line-height: 1.45;
 }
 
 .source-list {
@@ -169,6 +229,41 @@ button {
   color: #243449;
   font-size: 13px;
   font-weight: 700;
+}
+
+.citation-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.citation-item {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid #edf1f5;
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.citation-item span {
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: #0f5f75;
+  background: #e7f7fb;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.citation-item strong {
+  color: #243449;
+}
+
+.citation-item small {
+  color: #6d7d8f;
+  line-height: 1.4;
 }
 
 .metric-list {
@@ -216,5 +311,11 @@ button {
   .topbar {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }

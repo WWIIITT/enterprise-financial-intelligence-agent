@@ -1,14 +1,14 @@
 from time import perf_counter
 
 from app.api.schemas import ChatRequest, ChatResponse, Metrics, Source, TraceStep
-from app.rag.store import rag_store
+from app.rag.store import StoredChunk, rag_store, rank_chunks
 from app.rag.vector_store import qdrant_vector_store
 from app.services.metadata_service import record_request_log
 
 
 def build_rag_chat_response(request: ChatRequest) -> ChatResponse:
     start = perf_counter()
-    retrieved = qdrant_vector_store.search(request.message, limit=5) or rag_store.search(request.message, limit=5)
+    retrieved = _retrieve_chunks(request.message, limit=5)
 
     if not retrieved:
         answer = (
@@ -44,6 +44,14 @@ def build_rag_chat_response(request: ChatRequest) -> ChatResponse:
     )
     record_request_log(request.message, response.agent, len(response.sources), latency_ms)
     return response
+
+
+def _retrieve_chunks(query: str, limit: int) -> list[StoredChunk]:
+    candidates = qdrant_vector_store.search(query, limit=limit) + rag_store.search(query, limit=limit)
+    deduped: dict[str, StoredChunk] = {}
+    for chunk in candidates:
+        deduped[chunk.id] = chunk
+    return rank_chunks(query, list(deduped.values()), limit)
 
 
 def _select_agent(chunks) -> str:
