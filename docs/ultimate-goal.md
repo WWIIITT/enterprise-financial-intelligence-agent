@@ -68,13 +68,14 @@ Policy documents:
 
 ## Workflow Orchestrator
 
-未來使用 LangGraph 做 routing
+使用 LangGraph 做 deterministic routing
 
-預期能力:
+目前能力:
 
-- 根據問題決定使用 Document Agent、SQL Agent、Macro Agent、Policy Agent，或多個 agents 合作
+- 根據問題決定使用 Document Agent、Policy Agent、Macro Agent、Macro + Document route，或 fallback route
 - 記錄 route decision
-- 回傳 trace，讓使用者知道系統用了哪些工具和資料
+- 回傳 multi-step trace，讓使用者知道系統用了哪些工具和資料
+- 保留原有 `/api/chat` response shape，frontend 不需要大改
 
 ## Evaluation Engine
 
@@ -333,18 +334,27 @@ Completed for MVP scope
 目標:
 
 ```text
-agent routing
+agent routing + multi-step trace
 ```
 
-計劃:
+狀態:
 
-- LangGraph router
-- Document Research Agent
-- Policy Compliance Agent
-- Macro Analysis Agent
-- Later SQL Analytics Agent
-- Selected route in response
-- Multi-agent trace
+```text
+Completed for MVP scope
+```
+
+已完成:
+
+- LangGraph `StateGraph` orchestrator
+- Deterministic router
+- Document Research route
+- Policy Compliance route
+- Macro Analysis route
+- Macro + Document route
+- Fallback route
+- Unified route trace
+- `/api/chat` keeps the same response shape
+- `orchestrator-smoke` evaluation suite
 
 ## Sprint 6: SQL Analytics Agent
 
@@ -446,6 +456,7 @@ Sprint 1: mostly completed
 Sprint 2: completed for MVP scope
 Sprint 3: completed for MVP scope
 Sprint 4: completed for MVP scope
+Sprint 5: completed for MVP scope
 ```
 
 目前系統能力:
@@ -457,20 +468,21 @@ Sprint 4: completed for MVP scope
 - SEC risk synthesis
 - FRED macro series API
 - Macro analysis endpoint
-- Macro-aware chat routing
+- LangGraph Workflow Orchestrator
+- Macro-aware and document-aware routing
 - Frontend demo for chat、ingestion、system status、SEC controls、macro controls
-- SEC and macro smoke evaluation suites
+- SEC、macro、orchestrator smoke evaluation suites
 
 ## 下一個開發步驟
 
 ```text
-Start Sprint 5: LangGraph Workflow Orchestrator
+Start Sprint 6: SQL Analytics Agent
 ```
 
 下一步工作:
 
-1. 建立 LangGraph router
-2. 將 current deterministic routing 包成 Document、Policy、Macro agent nodes
-3. 統一 route trace 格式
-4. 支援 multi-agent question，例如 SEC filing + FRED macro + policy review
-5. 為 router accuracy 建立 evaluation cases
+1. 建立 PostgreSQL financial facts schema
+2. 接入 SEC Company Facts API
+3. 實作 safe SQL analytics service
+4. 建立 `/api/sql/analyze` 或類似 endpoint
+5. 加入 SQL Agent route 與 evaluation cases

@@ -47,6 +47,7 @@ Evaluation should measure more than whether the answer sounds good. Aurelia Ledg
 - `smoke`: endpoint and response shape checks.
 - `sec-smoke`: real SEC filing retrieval, citation, route, and unsupported-claim checks.
 - `macro-smoke`: FRED/sample macro series, macro routing, and macro citation checks.
+- `orchestrator-smoke`: LangGraph route selection and trace checks.
 - `rag_factual`: factual questions requiring cited answers.
 - `macro_analysis`: FRED-based macro reasoning.
 - `policy_compliance`: internal policy QA.
@@ -73,3 +74,15 @@ Current checks:
 - Macro answers cite FRED series IDs.
 - Apple + interest rate questions produce company risk linkage.
 - Macro evaluation reports total cases, passed cases, pass rate, and latency.
+
+## Orchestrator Evaluation Cases
+
+Sprint 5 adds deterministic LangGraph routing cases in `backend/app/evals/orchestrator_cases.json`.
+
+Current checks:
+
+- Policy questions route through the policy workflow path.
+- SEC/company questions route through the document workflow path.
+- Macro questions route to `macro-analysis-agent`.
+- Company + macro questions route to `macro-document-orchestrator`.
+- Unsupported questions use fallback or no-answer safeguards.

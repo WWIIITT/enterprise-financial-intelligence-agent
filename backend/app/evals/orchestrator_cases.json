@@ -1,0 +1,38 @@
+[
+  {
+    "id": "orchestrator-policy-route",
+    "suite": "orchestrator-smoke",
+    "question": "What does the AI Usage Policy say about approved use?",
+    "required_answer_terms": ["Summary"]
+  },
+  {
+    "id": "orchestrator-document-route",
+    "suite": "orchestrator-smoke",
+    "question": "What risks are mentioned for Apple?",
+    "required_answer_terms": ["Summary"]
+  },
+  {
+    "id": "orchestrator-macro-route",
+    "suite": "orchestrator-smoke",
+    "question": "How is inflation trending based on CPI?",
+    "expected_agent": "macro-analysis-agent",
+    "required_source_type": "macro",
+    "required_answer_terms": ["Macro Context"],
+    "required_citation_terms": ["FRED CPIAUCSL"]
+  },
+  {
+    "id": "orchestrator-macro-document-route",
+    "suite": "orchestrator-smoke",
+    "question": "How do interest rates affect Apple valuation risk?",
+    "expected_agent": "macro-document-orchestrator",
+    "required_source_type": "macro",
+    "required_answer_terms": ["Company Risk Linkage"],
+    "required_citation_terms": ["FRED FEDFUNDS"]
+  },
+  {
+    "id": "orchestrator-fallback-route",
+    "suite": "orchestrator-smoke",
+    "question": "Explain unrelated quantum battery patents in detail.",
+    "required_answer_terms": ["source"]
+  }
+]

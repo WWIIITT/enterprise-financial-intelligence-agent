@@ -17,7 +17,15 @@ def build_rag_chat_response(request: ChatRequest) -> ChatResponse:
     start = perf_counter()
     if is_macro_question(request.message):
         return _build_macro_chat_response(request, start)
+    return build_retrieval_chat_response(request, start=start, log_request=True)
 
+
+def build_retrieval_chat_response(
+    request: ChatRequest,
+    start: float | None = None,
+    log_request: bool = True,
+) -> ChatResponse:
+    start_time = start if start is not None else perf_counter()
     retrieved, retrieval_backend, top_score = _retrieve_chunks(request.message, limit=5)
 
     if not retrieved:
@@ -51,7 +59,7 @@ def build_rag_chat_response(request: ChatRequest) -> ChatResponse:
         ]
         agent = _select_agent(retrieved)
 
-    latency_ms = int((perf_counter() - start) * 1000)
+    latency_ms = int((perf_counter() - start_time) * 1000)
     response = ChatResponse(
         answer=answer,
         agent=agent,
@@ -69,7 +77,8 @@ def build_rag_chat_response(request: ChatRequest) -> ChatResponse:
         ],
         metrics=Metrics(latency_ms=latency_ms),
     )
-    record_request_log(request.message, response.agent, len(response.sources), latency_ms)
+    if log_request:
+        record_request_log(request.message, response.agent, len(response.sources), latency_ms)
     return response
 
 

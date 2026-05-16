@@ -3,8 +3,8 @@
 ## Current Stage
 
 ```text
-Phase 4: Macro Analysis Agent
-Current stage: Sprint 4 macro/FRED integration is complete for MVP scope.
+Phase 5: LangGraph Workflow Orchestrator
+Current stage: Sprint 5 LangGraph orchestration is complete for MVP scope.
 ```
 
 Current completion:
@@ -14,6 +14,7 @@ Sprint 1: 80-90% completed
 Sprint 2: core completed for MVP scope
 Sprint 3: completed for MVP scope
 Sprint 4: completed for MVP scope
+Sprint 5: completed for MVP scope
 ```
 
 ## Sprint 1: Project Skeleton + RAG MVP Foundation
@@ -136,18 +137,35 @@ Completed:
 Status:
 
 ```text
-Completed for MVP scope. Next step is Sprint 5 LangGraph Workflow Orchestrator.
+Completed for MVP scope.
 ```
 
 ## Sprint 5: LangGraph Workflow Orchestrator
 
-- LangGraph router.
-- Document Research Agent.
-- Policy Compliance Agent.
-- Macro Analysis Agent.
-- Later SQL Analytics Agent.
+Goal:
+
+```text
+agent routing + multi-step trace
+```
+
+Completed:
+
+- LangGraph `StateGraph` orchestrator.
+- Deterministic router.
+- Document Research route.
+- Policy Compliance route.
+- Macro Analysis route.
+- Macro + Document route.
+- Fallback route.
 - Selected route in response.
-- Multi-agent trace.
+- Unified multi-step trace.
+- `orchestrator-smoke` evaluation suite.
+
+Status:
+
+```text
+Completed for MVP scope. Next step is Sprint 6 SQL Analytics Agent.
+```
 
 ## Sprint 6: SQL Analytics Agent
 

@@ -5,13 +5,14 @@ from pathlib import Path
 from time import perf_counter
 from typing import Any
 
+from app.agents.orchestrator import build_orchestrated_chat_response
 from app.api.schemas import ChatRequest, EvalRunRequest
 from app.core.config import ROOT_DIR
-from app.services.rag_service import build_rag_chat_response
 
 
 SEC_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "sec_filing_cases.json"
 MACRO_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "macro_cases.json"
+ORCHESTRATOR_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "orchestrator_cases.json"
 
 
 def run_evaluation_suite(request: EvalRunRequest) -> dict[str, object]:
@@ -39,6 +40,8 @@ def _load_cases(suite: str) -> list[dict[str, Any]]:
     paths = [SEC_CASES_PATH]
     if MACRO_CASES_PATH.exists():
         paths.append(MACRO_CASES_PATH)
+    if ORCHESTRATOR_CASES_PATH.exists():
+        paths.append(ORCHESTRATOR_CASES_PATH)
 
     cases: list[dict[str, Any]] = []
     for path in paths:
@@ -49,7 +52,7 @@ def _load_cases(suite: str) -> list[dict[str, Any]]:
 
 
 def _run_case(case: dict[str, Any]) -> dict[str, object]:
-    response = build_rag_chat_response(ChatRequest(message=case["question"]))
+    response = build_orchestrated_chat_response(ChatRequest(message=case["question"]))
     failures: list[str] = []
 
     expected_agent = case.get("expected_agent")

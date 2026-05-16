@@ -32,15 +32,39 @@ Observability Layer
 
 ## Current Implementation
 
-The repo currently implements the first development foundation:
+The repo currently implements the core MVP foundation:
 
 - FastAPI API shell.
 - React + TypeScript frontend shell.
 - Docker Compose for PostgreSQL, Qdrant, and Redis.
 - Five enterprise-style internal policy documents.
-- In-memory development RAG store for ingestion and citation-shaped chat responses.
+- Provider embeddings with persistent Qdrant retrieval.
+- SEC EDGAR live filing ingestion.
+- FRED macro series analysis with PostgreSQL cache.
+- LangGraph deterministic workflow orchestration.
+- Evaluation suites for SEC, macro, and orchestrator routing.
 
-The in-memory store is intentionally temporary. It lets the API and frontend workflow be tested before persistent Qdrant and PostgreSQL integration is completed.
+The in-memory store remains only as a local development guard. Qdrant is the primary vector retrieval backend when configured.
+
+## LangGraph Workflow
+
+```text
+/api/chat
+  |
+receive
+  |
+router_node
+  |
+  |-- policy -> Policy Compliance Agent -> policy RAG
+  |-- document -> Document Research Agent -> SEC/document RAG
+  |-- macro -> Macro Analysis Agent -> FRED/cache
+  |-- macro_document -> Macro + Document route -> FRED/cache + SEC RAG
+  |-- unknown -> fallback -> retrieval/no-answer safeguards
+  |
+respond with answer, sources, route trace, and metrics
+```
+
+Routing is deterministic in Sprint 5 to avoid extra LLM cost and keep evaluation repeatable.
 
 ## Target Data Flow
 

@@ -12,7 +12,7 @@ def test_eval_suite_returns_metrics(monkeypatch) -> None:
         agent = "document-research-agent"
         sources = [FakeSource()]
 
-    monkeypatch.setattr("app.services.eval_service.build_rag_chat_response", lambda request: FakeResponse())
+    monkeypatch.setattr("app.services.eval_service.build_orchestrated_chat_response", lambda request: FakeResponse())
 
     result = run_evaluation_suite(EvalRunRequest(suite="sec-smoke"))
 
@@ -31,7 +31,7 @@ def test_macro_eval_suite_returns_metrics(monkeypatch) -> None:
         agent = "macro-analysis-agent"
         sources = [FakeSource()]
 
-    monkeypatch.setattr("app.services.eval_service.build_rag_chat_response", lambda request: FakeResponse())
+    monkeypatch.setattr("app.services.eval_service.build_orchestrated_chat_response", lambda request: FakeResponse())
 
     result = run_evaluation_suite(EvalRunRequest(suite="macro-smoke"))
 

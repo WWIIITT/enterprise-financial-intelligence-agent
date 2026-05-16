@@ -11,11 +11,11 @@ from app.api.schemas import (
     MacroAnalyzeResponse,
     MacroSeriesResponse,
 )
+from app.agents.orchestrator import build_orchestrated_chat_response
 from app.services.config_service import get_config_status
 from app.services.eval_service import run_evaluation_suite
 from app.services.ingestion_service import ingest_policy_documents, ingest_sec_document
 from app.services.macro_service import analyze_macro_context, get_macro_series
-from app.services.rag_service import build_rag_chat_response
 
 
 router = APIRouter()
@@ -24,7 +24,7 @@ router = APIRouter()
 @router.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
     try:
-        return build_rag_chat_response(request)
+        return build_orchestrated_chat_response(request)
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 

@@ -20,6 +20,7 @@ This repo currently contains a working Phase 1 / Sprint 1 foundation:
 - Sprint 2 provider embeddings for persistent Qdrant retrieval.
 - Sprint 3 SEC EDGAR live ingestion.
 - Sprint 4 Macro Analysis Agent with FRED/sample macro data.
+- Sprint 5 LangGraph Workflow Orchestrator.
 - Architecture, roadmap, data source, and evaluation documentation.
 
 The first production-grade target is still:
@@ -516,6 +517,50 @@ Invoke-RestMethod -Method Post http://localhost:8000/api/evals/run `
 ```
 
 The browser UI includes a `Macro Analysis` panel with FRED series selection, series loading, and macro analysis controls.
+
+## Sprint 5 LangGraph Orchestrator Runbook
+
+Sprint 5 moves `/api/chat` behind a LangGraph workflow while keeping the same API response shape.
+
+The orchestrator uses deterministic routing:
+
+```text
+policy question        -> policy-compliance-agent
+SEC/company question   -> document-research-agent
+macro question         -> macro-analysis-agent
+company + macro        -> macro-document-orchestrator
+unsupported question   -> fallback / no-answer safeguards
+```
+
+Manual route checks:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/chat `
+  -ContentType "application/json" `
+  -Body '{"message":"What does the AI Usage Policy say about approved use?"}'
+```
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/chat `
+  -ContentType "application/json" `
+  -Body '{"message":"What risks are mentioned for Apple?"}'
+```
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/chat `
+  -ContentType "application/json" `
+  -Body '{"message":"How do interest rates affect Apple valuation risk?"}'
+```
+
+Run orchestrator evaluation:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/evals/run `
+  -ContentType "application/json" `
+  -Body '{"suite":"orchestrator-smoke"}'
+```
+
+The response trace should include `receive`, `route`, one agent step, and `respond`.
 
 ## API
 
