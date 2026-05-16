@@ -34,6 +34,7 @@ RAG + Macro + SQL Analytics + LangGraph + Security + Evaluation + Observability 
 
 ## Portfolio Deliverables
 
+- [Knowledge Website](site/index.md) - VitePress learning site for sprint-by-sprint and concept-by-concept project explanation. After GitHub Pages is enabled, the expected public URL is `https://<github-user>.github.io/enterprise-financial-intelligence-agent/`.
 - [Architecture Pack](docs/architecture-pack.md)
 - [Risk Register](docs/risk-register.md)
 - [Cost Estimate](docs/cost-estimate.md)
@@ -182,6 +183,23 @@ Frontend URL:
 ```text
 http://localhost:5173
 ```
+
+Run the knowledge website locally:
+
+```powershell
+cd site
+npm install
+npm run docs:dev
+```
+
+Build the knowledge website:
+
+```powershell
+cd site
+npm run docs:build
+```
+
+The knowledge website is designed for GitHub Pages deployment through `.github/workflows/deploy-knowledge-site.yml`.
 
 ## Run The Project End To End
 

@@ -23,6 +23,7 @@ node_modules/
 dist/
 build/
 .vite/
+.vitepress/.temp/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

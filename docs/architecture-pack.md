@@ -4,6 +4,8 @@
 
 Aurelia Ledger is an enterprise financial intelligence platform that simulates how a financial services firm could combine document research, macroeconomic analysis, structured financial analytics, policy compliance, security guardrails, evaluation, and observability into one AI-assisted research workflow.
 
+The public learning website for sprint-by-sprint and concept-by-concept explanation lives under `site/`. After GitHub Pages is enabled, it is intended to be published at `https://<github-user>.github.io/enterprise-financial-intelligence-agent/`.
+
 The project is designed to demonstrate two complementary capabilities:
 
 - Senior AI Engineer: building reliable RAG, data ingestion, agent routing, deterministic evaluation, and production-style APIs.
