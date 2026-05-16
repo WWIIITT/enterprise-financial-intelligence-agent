@@ -43,6 +43,7 @@ type IngestResponse = {
 type ConfigStatus = {
   service: string;
   llm_provider_configured: boolean;
+  embedding_configured: boolean;
   database_configured: boolean;
   qdrant_configured: boolean;
   redis_configured: boolean;
@@ -312,6 +313,7 @@ function App() {
               {configStatus ? (
                 <>
                   <StatusRow label="LLM Provider" ready={configStatus.llm_provider_configured} />
+                  <StatusRow label="Embedding Model" ready={configStatus.embedding_configured} />
                   <StatusRow label="PostgreSQL" ready={configStatus.database_configured} />
                   <StatusRow label="Qdrant" ready={configStatus.qdrant_configured} />
                   <StatusRow label="Redis" ready={configStatus.redis_configured} />

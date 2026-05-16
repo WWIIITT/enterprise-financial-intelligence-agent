@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from app.api.schemas import (
     ChatRequest,
@@ -19,7 +19,10 @@ router = APIRouter()
 
 @router.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
-    return build_rag_chat_response(request)
+    try:
+        return build_rag_chat_response(request)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @router.get("/config/status", response_model=ConfigStatusResponse)
@@ -29,12 +32,18 @@ def config_status() -> ConfigStatusResponse:
 
 @router.post("/ingest/policy", response_model=IngestResponse)
 def ingest_policy(request: IngestRequest) -> IngestResponse:
-    return ingest_policy_documents(request)
+    try:
+        return ingest_policy_documents(request)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @router.post("/ingest/sec", response_model=IngestResponse)
 def ingest_sec(request: IngestRequest) -> IngestResponse:
-    return ingest_sec_document(request)
+    try:
+        return ingest_sec_document(request)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @router.get("/macro/series/{series_id}", response_model=MacroSeriesResponse)

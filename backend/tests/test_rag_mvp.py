@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.rag.store import rag_store
 
 
 client = TestClient(app)
@@ -16,6 +17,7 @@ def test_chat_empty_index_returns_guidance() -> None:
 
 
 def test_policy_ingestion_indexes_local_documents() -> None:
+    rag_store.delete_by_source_type("policy")
     ingest_response = client.post("/api/ingest/policy", json={"source": "all"})
     ingest_body = ingest_response.json()
 
@@ -35,6 +37,7 @@ def test_policy_ingestion_indexes_local_documents() -> None:
 
 
 def test_sec_ingestion_accepts_inline_content() -> None:
+    rag_store.delete_by_source_type("sec")
     response = client.post(
         "/api/ingest/sec",
         json={
@@ -56,3 +59,14 @@ def test_sec_ingestion_accepts_inline_content() -> None:
 
     assert chat_response.status_code == 200
     assert chat_body["sources"][0]["source_type"] == "sec"
+
+
+def test_low_confidence_question_returns_no_answer() -> None:
+    response = client.post("/api/chat", json={"message": "Explain unrelated quantum battery patents in detail."})
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["agent"] in {"rag-orchestrator-empty-index", "rag-orchestrator-low-confidence"}
+    if body["agent"] == "rag-orchestrator-low-confidence":
+        assert body["sources"] == []
+        assert "not contain enough relevant evidence" in body["answer"]

@@ -273,7 +273,8 @@ real embeddings + persistent Qdrant + cleaner retrieval + better citations
 目前狀態：
 
 ```text
-下一個 development stage。
+Step 1 已實作：provider embedding client、separate embedding provider config、real-vector Qdrant path、lightweight reranking、low-confidence no-answer。
+真實 provider embedding 已可產生 vector；下一步是啟動 Docker Desktop 後做 Qdrant ingestion end-to-end verification，然後改善 chunking / citation quality。
 ```
 
 ## Sprint 3：SEC EDGAR Live Ingestion
@@ -475,7 +476,7 @@ Solution Architect deliverables
 
 ```text
 Sprint 1：80-90% completed
-Sprint 2：準備開始
+Sprint 2：Step 1 implemented，等待 provider embedding 實測
 ```
 
 已完成：
@@ -508,19 +509,26 @@ Sprint 2：準備開始
 - Ultimate goal / roadmap / architecture docs。
 - Backend tests passing。
 - Frontend build passing。
+- Provider embedding client。
+- Separate embedding provider API key / base URL config。
+- Qdrant real-vector upsert / search path。
+- Lightweight reranking。
+- Low-confidence no-answer behavior。
 
 目前所在階段：
 
 ```text
 Phase 2：RAG MVP
 Stage：basic RAG demo 已可用，準備升級成 production-grade RAG
+Current：Sprint 2 real embedding path 已實作，provider embedding 已驗證，等待 Qdrant ingestion 驗證
 ```
 
 更精準地說：
 
 ```text
 已完成 demo-grade RAG
-下一步是做 production-grade retrieval
+已完成 Sprint 2 Step 1 production-grade retrieval implementation
+下一步是 Qdrant ingestion end-to-end verification、chunking、citation quality
 ```
 
 ## Next Development Step
@@ -528,18 +536,16 @@ Stage：basic RAG demo 已可用，準備升級成 production-grade RAG
 下一個最值得做的 task：
 
 ```text
-Implement real embedding-based Qdrant retrieval
+Start Docker Desktop, verify Qdrant ingestion end to end, then improve chunking and citation quality
 ```
 
 具體工作：
 
-1. 加入 embedding client。
-2. 如果 provider 有 embedding model，就用 provider。
-3. 如果 provider 沒有 embedding model，就用 local `sentence-transformers`。
-4. 把目前 hash embedding 換成 real embeddings。
-5. Qdrant collection 改成依 embedding dimension 建立。
-6. Ingestion 時：chunk text -> embed -> store vectors in Qdrant -> store metadata in PostgreSQL。
-7. Chat 時：embed query -> Qdrant vector search -> rerank top results -> compose answer with clean citations。
-8. 改善 no-answer behavior：如果 retrieved score 太低，就回答沒有足夠 evidence，不要硬湊答案。
+1. 用真實 `EMBEDDING_MODEL` 跑 policy ingestion。
+2. 用真實 `EMBEDDING_MODEL` 跑 SEC sample ingestion。
+3. 確認 `vector_backend` 顯示 `qdrant-provider-embeddings`。
+4. 測試 policy question、Apple risk question、no-evidence question。
+5. 如果 provider 不支援 embeddings，改用 OpenAI embedding key 或下一步改 local `sentence-transformers`。
+6. 接著改善 chunking strategy、citation format、answer synthesis。
 
 這一步做完，project 會從「可展示 demo」升級成「真正 RAG system foundation」。

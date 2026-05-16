@@ -11,7 +11,7 @@ Current completion:
 
 ```text
 Sprint 1: 80-90% completed
-Sprint 2: ready to start
+Sprint 2: Step 1 implemented; ready for provider verification
 ```
 
 ## Sprint 1: Project Skeleton + RAG MVP Foundation
@@ -64,20 +64,21 @@ real embeddings + persistent Qdrant + cleaner retrieval + better citations
 
 Planned:
 
-- Add real embedding client.
-- Replace hash embedding with real embeddings.
-- Use Qdrant as the primary retrieval backend.
+- Add real embedding client. Done.
+- Support separate embedding provider API key/base URL. Done.
+- Replace hash embedding with real embeddings. Done for Qdrant production path.
+- Use Qdrant as the primary retrieval backend. Done when Qdrant and `EMBEDDING_MODEL` are configured.
 - Store document metadata, chunk metadata, and request logs in PostgreSQL.
 - Improve chunking strategy.
 - Improve citation format.
-- Add reranking.
-- Add no-answer behavior when evidence is weak.
+- Add reranking. Initial lightweight reranking done.
+- Add no-answer behavior when evidence is weak. Initial threshold behavior done.
 - Improve answer synthesis.
 
 Next task:
 
 ```text
-Implement real embedding-based Qdrant retrieval
+Start Docker Desktop, verify Qdrant ingestion end to end, then improve chunking and citation quality
 ```
 
 ## Sprint 3: SEC EDGAR Live Ingestion

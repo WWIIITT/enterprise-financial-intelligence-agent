@@ -16,6 +16,7 @@ class StoredChunk:
     source: str
     citation: str
     url: str | None = None
+    score: float = 0.0
 
 
 class InMemoryRagStore:
@@ -50,6 +51,11 @@ def _terms(value: str) -> set[str]:
 
 
 def rank_chunks(query: str, chunks: list[StoredChunk], limit: int = 5) -> list[StoredChunk]:
+    scored = score_chunks(query, chunks)
+    return [chunk for _, chunk in scored[:limit]]
+
+
+def score_chunks(query: str, chunks: list[StoredChunk]) -> list[tuple[float, StoredChunk]]:
     query_terms = _terms(query)
     if not query_terms:
         return []
@@ -66,7 +72,7 @@ def rank_chunks(query: str, chunks: list[StoredChunk], limit: int = 5) -> list[S
             scored.append((score, chunk))
 
     scored.sort(key=lambda item: item[0], reverse=True)
-    return [chunk for _, chunk in scored[:limit]]
+    return scored
 
 
 def _source_intent_boost(query_terms: set[str], chunk: StoredChunk) -> float:

@@ -17,6 +17,7 @@ This repo currently contains a working Phase 1 / Sprint 1 foundation:
 - Docker Compose services for PostgreSQL, Qdrant, and Redis.
 - Local policy documents in `data/policies/`.
 - Basic local RAG ingestion and citation-shaped chat responses for development.
+- Sprint 2 provider embeddings for persistent Qdrant retrieval.
 - Architecture, roadmap, data source, and evaluation documentation.
 
 The first production-grade target is still:
@@ -76,7 +77,9 @@ Create `.env` from `.env.example` and fill in local values:
 LLM_API_KEY=
 LLM_BASE_URL=https://your-openai-compatible-provider.example/v1
 LLM_MODEL=
-EMBEDDING_MODEL=
+EMBEDDING_API_KEY=
+EMBEDDING_BASE_URL=https://your-openai-compatible-provider.example/v1
+EMBEDDING_MODEL=text-embedding-3-small
 DATABASE_URL=postgresql+psycopg://aurelia:aurelia@localhost:5432/aurelia_ledger
 QDRANT_URL=http://localhost:6333
 REDIS_URL=redis://localhost:6379/0
@@ -91,20 +94,23 @@ Environment variable reference:
 | `LLM_API_KEY` | Yes | API key for your OpenAI-compatible LLM provider. |
 | `LLM_BASE_URL` | Yes | Base URL for the LLM provider, usually ending in `/v1`. |
 | `LLM_MODEL` | Yes | Chat model used for answer generation. |
-| `EMBEDDING_MODEL` | Not yet | Embedding model for production vector search. Current local RAG can run without it because it uses a development fallback. |
+| `EMBEDDING_API_KEY` | Optional | API key for a separate embedding provider. If empty, `LLM_API_KEY` is reused. |
+| `EMBEDDING_BASE_URL` | Optional | Base URL for a separate embedding provider. If empty, `LLM_BASE_URL` is reused. Prefer `/v1`, not `/v1/embeddings`. |
+| `EMBEDDING_MODEL` | Yes for Sprint 2 RAG | Embedding model for production Qdrant vector search, for example `text-embedding-3-small`. |
 | `DATABASE_URL` | Yes | PostgreSQL connection string for metadata, chunks, and request logs. |
 | `QDRANT_URL` | Yes | Qdrant vector database URL. |
 | `REDIS_URL` | Later | Redis connection string for future queue/cache workflows. |
 | `FRED_API_KEY` | Later | FRED API key for macroeconomic data ingestion. |
 | `SEC_USER_AGENT` | Yes before live SEC ingestion | Identifiable SEC EDGAR user agent, normally `your-name your-email@example.com`. |
 
-If you do not have an embedding model yet, leave `EMBEDDING_MODEL` empty for now:
+For Sprint 2 RAG, set `EMBEDDING_MODEL` to an embedding model supported by your OpenAI-compatible provider:
 
 ```env
-EMBEDDING_MODEL=
+EMBEDDING_BASE_URL=https://your-openai-compatible-provider.example/v1
+EMBEDDING_MODEL=text-embedding-3-small
 ```
 
-The current Sprint 1 development flow still works because local retrieval has a fallback path. Before production-grade Qdrant retrieval, choose an embedding model from your provider, for example an OpenAI-compatible embedding model such as `text-embedding-3-small` if your provider supports it.
+Do not use a rerank model such as `qwen3-rerank` for `EMBEDDING_MODEL`. Qdrant needs a text embedding model to create vectors. If `EMBEDDING_MODEL` is empty while Qdrant is running, ingestion and chat will return a clear API error because Sprint 2 persistent retrieval requires real embeddings.
 
 Start infrastructure:
 
@@ -125,11 +131,32 @@ Backend URL:
 http://localhost:8000
 ```
 
+If Windows blocks port `8000` with `[WinError 10013]`, use port `8001`:
+
+```powershell
+cd backend
+..\.venv\Scripts\python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8001
+```
+
+Backend fallback URL:
+
+```text
+http://localhost:8001
+```
+
 Run frontend:
 
 ```powershell
 cd frontend
 npm install
+npm run dev
+```
+
+If the backend is running on port `8001`, start frontend with:
+
+```powershell
+cd frontend
+$env:VITE_API_TARGET="http://localhost:8001"
 npm run dev
 ```
 
@@ -197,6 +224,13 @@ Backend URL:
 http://localhost:8000
 ```
 
+Windows port fallback:
+
+```powershell
+cd backend
+..\.venv\Scripts\python -m uvicorn app.main:app
+```
+
 ### 5. Verify backend from a second terminal
 
 Open a second PowerShell terminal from the repo root:
@@ -221,7 +255,7 @@ status            : completed
 source_type       : policy
 documents_indexed : 5
 chunks_indexed    : greater than 5
-vector_backend    : qdrant+in-memory
+vector_backend    : qdrant-provider-embeddings
 ```
 
 ### 7. Optional API test: ingest sample SEC content
@@ -297,6 +331,64 @@ What risks are mentioned for Apple?
 
 The UI should show the answer, citations, agent trace, latency, source count, ingestion status, and system configuration status. This flow no longer requires manual PowerShell ingestion for the demo.
 
+## Sprint 2 RAG Runbook
+
+Sprint 2 uses provider embeddings and Qdrant as the primary retrieval backend.
+
+1. Confirm `.env` has these values:
+
+```env
+LLM_API_KEY=your-provider-key
+LLM_BASE_URL=https://your-openai-compatible-provider.example/v1
+LLM_MODEL=your-chat-model
+EMBEDDING_API_KEY=your-provider-key
+EMBEDDING_BASE_URL=https://your-openai-compatible-provider.example/v1
+EMBEDDING_MODEL=text-embedding-3-small
+QDRANT_URL=http://localhost:6333
+```
+
+2. Start infrastructure:
+
+```powershell
+docker compose -f infra\docker-compose.yml up -d
+```
+
+3. Start the backend:
+
+```powershell
+cd backend
+..\.venv\Scripts\python -m uvicorn app.main:app --reload
+```
+
+4. Ingest policy and SEC sample from the browser, or use PowerShell:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/ingest/policy `
+  -ContentType "application/json" `
+  -Body '{"source":"all"}'
+```
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/ingest/sec `
+  -ContentType "application/json" `
+  -Body '{"source":"sample-sec-inline","ticker":"AAPL","content":"Apple reports revenue risk from foreign exchange, interest rates, product demand, supply chain constraints, and macroeconomic uncertainty."}'
+```
+
+5. Test cited chat:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/chat `
+  -ContentType "application/json" `
+  -Body '{"message":"What risks are mentioned for Apple?"}'
+```
+
+Common Sprint 2 issues:
+
+- `EMBEDDING_MODEL is required`: add a provider-supported embedding model to `.env`.
+- `Embedding provider request failed`: check `EMBEDDING_API_KEY`, `EMBEDDING_BASE_URL`, `EMBEDDING_MODEL`, and whether your provider supports embeddings.
+- `EMBEDDING_MODEL appears to be a reranking model`: choose a model tagged as text embedding, not rerank.
+- `Qdrant collection vector size is ...`: your existing Qdrant collection was created with another embedding dimension. Recreate the Docker volume or reset the collection, then ingest again.
+
 ## API
 
 ```text
@@ -336,5 +428,5 @@ Invoke-RestMethod -Method Post http://localhost:8000/api/chat `
 ## Notes
 
 - `.env` is ignored by Git. Do not commit real API keys.
-- Current local RAG uses an in-memory development store so the API can be tested before full PostgreSQL and Qdrant persistence is completed.
+- Sprint 2 uses provider embeddings and Qdrant for persistent retrieval when Qdrant is running. The in-memory store remains only as a development/test guard.
 - You will manually commit and push to GitHub.

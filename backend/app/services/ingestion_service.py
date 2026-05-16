@@ -3,8 +3,9 @@ from pathlib import Path
 from app.api.schemas import IngestRequest, IngestResponse
 from app.core.config import ROOT_DIR
 from app.rag.chunking import chunk_text
+from app.rag.embedding_client import EmbeddingConfigurationError, EmbeddingProviderError, embedding_client
 from app.rag.store import StoredChunk, rag_store, stable_chunk_id
-from app.rag.vector_store import qdrant_vector_store
+from app.rag.vector_store import QdrantVectorStoreError, qdrant_vector_store
 from app.services.metadata_service import record_ingested_chunks
 
 
@@ -33,7 +34,7 @@ def ingest_policy_documents(request: IngestRequest) -> IngestResponse:
     rag_store.delete_by_source_type("policy")
     qdrant_vector_store.delete_by_source_type("policy")
     indexed = rag_store.upsert(stored_chunks)
-    qdrant_enabled = qdrant_vector_store.upsert(stored_chunks)
+    qdrant_enabled = _upsert_qdrant(stored_chunks)
     if files:
         record_ingested_chunks("policy", request.source, "Internal Policy Documents", stored_chunks)
     return IngestResponse(
@@ -42,8 +43,8 @@ def ingest_policy_documents(request: IngestRequest) -> IngestResponse:
         source=request.source,
         documents_indexed=len(files),
         chunks_indexed=indexed,
-        vector_backend="qdrant+in-memory" if qdrant_enabled else "in-memory-dev-store",
-        message="Policy documents indexed for local RAG. Qdrant is used when available; otherwise local development search is used.",
+        vector_backend="qdrant-provider-embeddings" if qdrant_enabled else "in-memory-dev-store",
+        message=_ingestion_message(qdrant_enabled),
     )
 
 
@@ -66,7 +67,7 @@ def ingest_sec_document(request: IngestRequest) -> IngestResponse:
     rag_store.delete_by_source_type("sec")
     qdrant_vector_store.delete_by_source_type("sec")
     indexed = rag_store.upsert(stored_chunks)
-    qdrant_enabled = qdrant_vector_store.upsert(stored_chunks)
+    qdrant_enabled = _upsert_qdrant(stored_chunks)
     record_ingested_chunks("sec", request.source, f"SEC Filing: {title}", stored_chunks)
     return IngestResponse(
         status="completed",
@@ -74,8 +75,30 @@ def ingest_sec_document(request: IngestRequest) -> IngestResponse:
         source=request.source,
         documents_indexed=1 if text else 0,
         chunks_indexed=indexed,
-        vector_backend="qdrant+in-memory" if qdrant_enabled else "in-memory-dev-store",
-        message="SEC content indexed from request content or local sample text. Live EDGAR fetching is planned after SEC connector hardening.",
+        vector_backend="qdrant-provider-embeddings" if qdrant_enabled else "in-memory-dev-store",
+        message=_ingestion_message(qdrant_enabled),
+    )
+
+
+def _upsert_qdrant(chunks: list[StoredChunk]) -> bool:
+    if not chunks:
+        return False
+    if not qdrant_vector_store.available():
+        return False
+
+    try:
+        vectors = embedding_client.embed_texts([chunk.text for chunk in chunks])
+        return qdrant_vector_store.upsert(chunks, vectors)
+    except (EmbeddingConfigurationError, EmbeddingProviderError, QdrantVectorStoreError) as exc:
+        raise RuntimeError(str(exc)) from exc
+
+
+def _ingestion_message(qdrant_enabled: bool) -> str:
+    if qdrant_enabled:
+        return "Documents indexed with provider embeddings in Qdrant and mirrored in the local development store."
+    return (
+        "Documents indexed in the local development store. Qdrant was not reachable, so persistent vector retrieval "
+        "was skipped for this run."
     )
 
 

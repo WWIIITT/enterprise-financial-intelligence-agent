@@ -36,6 +36,7 @@ class ChatResponse(BaseModel):
 class ConfigStatusResponse(BaseModel):
     service: str
     llm_provider_configured: bool
+    embedding_configured: bool
     database_configured: bool
     qdrant_configured: bool
     redis_configured: bool

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from hashlib import blake2b
-
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchValue, PointStruct, VectorParams
 
@@ -10,8 +8,11 @@ from app.core.network import can_open_tcp_connection
 from app.rag.store import StoredChunk
 
 
-VECTOR_SIZE = 384
 COLLECTION_NAME = "aurelia_ledger_chunks"
+
+
+class QdrantVectorStoreError(RuntimeError):
+    pass
 
 
 class QdrantVectorStore:
@@ -19,24 +20,29 @@ class QdrantVectorStore:
         self._client: QdrantClient | None = None
 
     def available(self) -> bool:
+        if settings.testing:
+            return False
         return bool(settings.qdrant_url and can_open_tcp_connection(settings.qdrant_url)) and self._get_client() is not None
 
-    def upsert(self, chunks: list[StoredChunk]) -> bool:
+    def upsert(self, chunks: list[StoredChunk], vectors: list[list[float]]) -> bool:
         if not self.available():
             return False
 
         client = self._get_client()
         if client is None or not chunks:
             return False
+        if len(chunks) != len(vectors):
+            raise QdrantVectorStoreError("Chunk and vector counts do not match.")
 
         try:
-            self._ensure_collection(client)
+            vector_size = _vector_size(vectors)
+            self._ensure_collection(client, vector_size)
             client.upsert(
                 collection_name=COLLECTION_NAME,
                 points=[
                     PointStruct(
                         id=chunk.id,
-                        vector=hash_embedding(chunk.text),
+                        vector=vector,
                         payload={
                             "title": chunk.title,
                             "text": chunk.text,
@@ -46,11 +52,31 @@ class QdrantVectorStore:
                             "url": chunk.url,
                         },
                     )
-                    for chunk in chunks
+                    for chunk, vector in zip(chunks, vectors)
                 ],
             )
-        except Exception:
+        except QdrantVectorStoreError:
+            raise
+        except Exception as exc:
+            raise QdrantVectorStoreError(f"Qdrant upsert failed: {exc}") from exc
+
+        return True
+
+    def recreate_collection(self, vector_size: int) -> bool:
+        if not self.available():
             return False
+
+        client = self._get_client()
+        if client is None:
+            return False
+
+        try:
+            client.recreate_collection(
+                collection_name=COLLECTION_NAME,
+                vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE),
+            )
+        except Exception as exc:
+            raise QdrantVectorStoreError(f"Qdrant collection reset failed: {exc}") from exc
 
         return True
 
@@ -63,7 +89,6 @@ class QdrantVectorStore:
             return False
 
         try:
-            self._ensure_collection(client)
             client.delete(
                 collection_name=COLLECTION_NAME,
                 points_selector=Filter(
@@ -80,7 +105,7 @@ class QdrantVectorStore:
 
         return True
 
-    def search(self, query: str, limit: int = 5) -> list[StoredChunk]:
+    def search(self, query_vector: list[float], limit: int = 5) -> list[StoredChunk]:
         if not self.available():
             return []
 
@@ -89,14 +114,17 @@ class QdrantVectorStore:
             return []
 
         try:
-            self._ensure_collection(client)
+            self._validate_collection(client, len(query_vector))
             results = client.search(
                 collection_name=COLLECTION_NAME,
-                query_vector=hash_embedding(query),
+                query_vector=query_vector,
                 limit=limit,
+                with_payload=True,
             )
-        except Exception:
-            return []
+        except QdrantVectorStoreError:
+            raise
+        except Exception as exc:
+            raise QdrantVectorStoreError(f"Qdrant search failed: {exc}") from exc
 
         chunks: list[StoredChunk] = []
         for result in results:
@@ -110,6 +138,7 @@ class QdrantVectorStore:
                     source=str(payload.get("source", "")),
                     citation=str(payload.get("citation", "")),
                     url=payload.get("url") if isinstance(payload.get("url"), str) else None,
+                    score=float(result.score or 0.0),
                 )
             )
         return chunks
@@ -125,29 +154,42 @@ class QdrantVectorStore:
             self._client = None
         return self._client
 
-    @staticmethod
-    def _ensure_collection(client: QdrantClient) -> None:
+    def _ensure_collection(self, client: QdrantClient, vector_size: int) -> None:
         collections = client.get_collections().collections
         if any(collection.name == COLLECTION_NAME for collection in collections):
+            self._validate_collection(client, vector_size)
             return
         client.create_collection(
             collection_name=COLLECTION_NAME,
-            vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE),
+            vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE),
         )
 
+    @staticmethod
+    def _validate_collection(client: QdrantClient, vector_size: int) -> None:
+        try:
+            info = client.get_collection(collection_name=COLLECTION_NAME)
+        except Exception as exc:
+            raise QdrantVectorStoreError(f"Qdrant collection is unavailable: {exc}") from exc
 
-def hash_embedding(text: str) -> list[float]:
-    vector = [0.0] * VECTOR_SIZE
-    for token in text.lower().split():
-        digest = blake2b(token.encode("utf-8"), digest_size=8).digest()
-        index = int.from_bytes(digest[:4], "big") % VECTOR_SIZE
-        sign = 1.0 if digest[4] % 2 == 0 else -1.0
-        vector[index] += sign
+        vectors_config = info.config.params.vectors
+        existing_size = getattr(vectors_config, "size", None)
+        if existing_size is None and isinstance(vectors_config, dict):
+            first_config = next(iter(vectors_config.values()), None)
+            existing_size = getattr(first_config, "size", None)
+        if existing_size and int(existing_size) != vector_size:
+            raise QdrantVectorStoreError(
+                f"Qdrant collection vector size is {existing_size}, but embedding model returned {vector_size}. "
+                "Reset the Qdrant collection before re-ingesting."
+            )
 
-    magnitude = sum(value * value for value in vector) ** 0.5
-    if magnitude == 0:
-        return vector
-    return [value / magnitude for value in vector]
+
+def _vector_size(vectors: list[list[float]]) -> int:
+    if not vectors or not vectors[0]:
+        raise QdrantVectorStoreError("Embedding vector is empty.")
+    vector_size = len(vectors[0])
+    if any(len(vector) != vector_size for vector in vectors):
+        raise QdrantVectorStoreError("Embedding vectors have inconsistent dimensions.")
+    return vector_size
 
 
 qdrant_vector_store = QdrantVectorStore()
