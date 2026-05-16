@@ -79,7 +79,7 @@ export default defineConfig({
         ]
       }
     ],
-    socialLinks: [{ icon: "github", link: "https://github.com/" }],
+    socialLinks: [{ icon: "github", link: "https://github.com/WWIIITT/enterprise-financial-intelligence-agent" }],
     search: { provider: "local" },
     outline: {
       level: [2, 3],

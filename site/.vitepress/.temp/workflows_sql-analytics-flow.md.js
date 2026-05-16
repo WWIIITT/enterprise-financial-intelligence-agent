@@ -1,7 +1,7 @@
 import { ssrRenderAttrs, ssrRenderStyle } from "vue/server-renderer";
 import { useSSRContext } from "vue";
 import { _ as _export_sfc } from "./plugin-vue_export-helper.1tPrXgE0.js";
-const __pageData = JSON.parse('{"title":"SQL Analytics Flow","description":"","frontmatter":{},"headers":[],"relativePath":"workflows/sql-analytics-flow.md","filePath":"workflows/sql-analytics-flow.md","lastUpdated":null}');
+const __pageData = JSON.parse('{"title":"SQL Analytics Flow","description":"","frontmatter":{},"headers":[],"relativePath":"workflows/sql-analytics-flow.md","filePath":"workflows/sql-analytics-flow.md","lastUpdated":1778952706000}');
 const _sfc_main = { name: "workflows/sql-analytics-flow.md" };
 function _sfc_ssrRender(_ctx, _push, _parent, _attrs, $props, $setup, $data, $options) {
   _push(`<div${ssrRenderAttrs(_attrs)}><h1 id="sql-analytics-flow" tabindex="-1">SQL Analytics Flow <a class="header-anchor" href="#sql-analytics-flow" aria-label="Permalink to &quot;SQL Analytics Flow&quot;">​</a></h1><h2 id="purpose" tabindex="-1">Purpose <a class="header-anchor" href="#purpose" aria-label="Permalink to &quot;Purpose&quot;">​</a></h2><p>This workflow explains how structured financial facts are ingested and queried safely.</p><h2 id="flow" tabindex="-1">Flow <a class="header-anchor" href="#flow" aria-label="Permalink to &quot;Flow&quot;">​</a></h2><div class="language-mermaid vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">mermaid</span><pre class="shiki shiki-themes github-light github-dark vp-code" tabindex="0"><code><span class="line"><span style="${ssrRenderStyle({ "--shiki-light": "#24292E", "--shiki-dark": "#E1E4E8" })}">flowchart TD</span></span>
