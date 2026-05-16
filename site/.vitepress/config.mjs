@@ -72,6 +72,7 @@ export default defineConfig({
         items: [
           { text: "API Reference", link: "/reference/api-reference" },
           { text: "Environment Variables", link: "/reference/environment-variables" },
+          { text: "Source Map", link: "/reference/source-map" },
           { text: "Local Runbook", link: "/reference/local-runbook" },
           { text: "Deployment", link: "/reference/deployment" },
           { text: "External Sources", link: "/reference/external-sources" },

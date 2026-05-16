@@ -266,7 +266,7 @@ After GitHub Pages is enabled, the expected URL is:
 https://WWIIITT.github.io/enterprise-financial-intelligence-agent/
 ```
 
-The site explains the project sprint by sprint, concept by concept, and workflow by workflow.
+The site explains the project sprint by sprint, concept by concept, and workflow by workflow. It includes GitHub source-code line references, technical walkthroughs, formulas, examples, and exercises.
 
 ## Deployment Notes
 

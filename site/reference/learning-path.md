@@ -37,3 +37,15 @@ Read Sprint 10 and the repository docs:
 - `docs/cost-estimate.md`
 - `docs/demo-script.md`
 - `docs/interview-talking-points.md`
+
+## 6. Read Code While Learning
+
+Use the [Source Map](/reference/source-map) after each concept page. The source map links directly to GitHub line ranges for the implementation areas discussed in the site.
+
+Recommended pattern:
+
+1. Read the concept page
+2. Open the linked source lines
+3. Run the related API command from the example
+4. Answer the exercise prompts
+5. Practice the interview drill out loud
