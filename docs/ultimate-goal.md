@@ -440,20 +440,19 @@ Completed:
 Status:
 
 ```text
-Planned
+Completed for portfolio scope
 ```
 
-Planned:
+Completed:
 
-- Architecture diagram
-- Data flow diagram
-- Security design
-- Cost estimate
-- Risk register
-- Deployment roadmap
-- Evaluation report
-- Demo script
-- Interview talking points
+- `docs/architecture-pack.md`
+- `docs/risk-register.md`
+- `docs/cost-estimate.md`
+- `docs/deployment-roadmap.md`
+- `docs/security-governance.md`
+- `docs/demo-script.md`
+- `docs/interview-talking-points.md`
+- README portfolio deliverables index
 
 ## Current Progress
 
@@ -467,6 +466,7 @@ Sprint 6: completed for MVP scope
 Sprint 7: completed for MVP scope
 Sprint 8: completed for MVP scope
 Sprint 9: completed for MVP scope
+Sprint 10: completed for portfolio scope
 ```
 
 目前系統能力:
@@ -485,19 +485,20 @@ Sprint 9: completed for MVP scope
 - Markdown / JSON evaluation reports
 - Security / Governance Guardrails
 - Observability Dashboard
+- Architecture Pack
 - Frontend demo for chat、ingestion、system status、SEC controls、macro controls、SQL controls、governance controls、observability controls
 - SEC、macro、orchestrator、SQL、security、observability smoke evaluation suites
 
 ## Next Development Step
 
 ```text
-Start Sprint 10: Architecture Pack / Portfolio Polish
+Portfolio review and optional production hardening
 ```
 
 下一步工作:
 
-1. 補完整 architecture pack
-2. 建立 demo script
-3. 建立 interview talking points
-4. 補 cost estimate
-5. 補 risk register 和 deployment roadmap
+1. 錄製 5 到 8 分鐘 demo video
+2. 檢查 GitHub README first impression
+3. 準備 interview talking points
+4. 選擇下一個 production hardening sprint
+5. 手動 commit 和 push

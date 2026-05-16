@@ -10,26 +10,38 @@ The full product goal, module list, technology choices, roadmap, deliverables, a
 
 ## Current Status
 
-This repo currently contains a working Phase 1 / Sprint 1 foundation:
+This repo currently contains a portfolio-ready enterprise AI platform MVP:
 
-- FastAPI backend with health, chat, ingestion, macro, config, and evaluation endpoints.
-- React + TypeScript frontend skeleton.
+- FastAPI backend with health, chat, ingestion, macro, SQL analytics, security, observability, config, and evaluation endpoints.
+- React + TypeScript frontend dashboard.
 - Docker Compose services for PostgreSQL, Qdrant, and Redis.
 - Local policy documents in `data/policies/`.
-- Basic local RAG ingestion and citation-shaped chat responses for development.
 - Sprint 2 provider embeddings for persistent Qdrant retrieval.
 - Sprint 3 SEC EDGAR live ingestion.
 - Sprint 4 Macro Analysis Agent with FRED/sample macro data.
 - Sprint 5 LangGraph Workflow Orchestrator.
 - Sprint 6 SQL Analytics Agent with SEC Company Facts sample/live ingestion.
 - Sprint 7 deterministic LLMOps / Evaluation Engine.
-- Architecture, roadmap, data source, and evaluation documentation.
+- Sprint 8 Security / Governance Guardrails.
+- Sprint 9 Observability Dashboard.
+- Sprint 10 architecture pack and portfolio documentation.
 
-The first production-grade target is still:
+The current portfolio signal is:
 
 ```text
-FastAPI + Qdrant + PostgreSQL + SEC ingestion + policy ingestion + citation-aware RAG
+RAG + Macro + SQL Analytics + LangGraph + Security + Evaluation + Observability + Architecture Pack
 ```
+
+## Portfolio Deliverables
+
+- [Architecture Pack](docs/architecture-pack.md)
+- [Risk Register](docs/risk-register.md)
+- [Cost Estimate](docs/cost-estimate.md)
+- [Deployment Roadmap](docs/deployment-roadmap.md)
+- [Security and Governance](docs/security-governance.md)
+- [Demo Script](docs/demo-script.md)
+- [Interview Talking Points](docs/interview-talking-points.md)
+- [Latest Evaluation Report](data/reports/evaluation-report.md)
 
 ## Tech Stack
 

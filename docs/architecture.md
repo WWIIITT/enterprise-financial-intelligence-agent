@@ -1,5 +1,7 @@
 # Architecture
 
+For the full portfolio architecture deliverable, see [Architecture Pack](architecture-pack.md).
+
 ## System Goal
 
 Aurelia Ledger is an enterprise financial intelligence platform. It combines document research, macroeconomic analysis, structured analytics, policy compliance, and multi-agent orchestration into a traceable AI workflow.

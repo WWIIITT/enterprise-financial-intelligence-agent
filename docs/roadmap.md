@@ -3,8 +3,8 @@
 ## Current Stage
 
 ```text
-Phase 9: Observability Dashboard
-Current stage: Sprint 9 custom observability dashboard is implemented for MVP scope.
+Phase 10: Architecture Pack / Portfolio Polish
+Current stage: Sprint 10 architecture deliverables are complete for portfolio review.
 ```
 
 Current completion:
@@ -19,6 +19,7 @@ Sprint 6: completed for MVP scope
 Sprint 7: completed for MVP scope
 Sprint 8: completed for MVP scope
 Sprint 9: completed for MVP scope
+Sprint 10: completed for portfolio scope
 ```
 
 ## Sprint 1: Project Skeleton + RAG MVP Foundation
@@ -281,12 +282,25 @@ Completed for MVP scope. Next step is Sprint 10 Architecture Pack / Portfolio Po
 
 ## Sprint 10: Architecture Pack / Portfolio Polish
 
-- Architecture diagram.
-- Data flow diagram.
-- Security design.
-- Cost estimate.
-- Risk register.
-- Deployment roadmap.
-- Evaluation report.
-- Demo script.
-- Interview talking points.
+Goal:
+
+```text
+portfolio-ready architecture pack and interview materials
+```
+
+Completed:
+
+- `docs/architecture-pack.md`.
+- `docs/risk-register.md`.
+- `docs/cost-estimate.md`.
+- `docs/deployment-roadmap.md`.
+- `docs/security-governance.md`.
+- `docs/demo-script.md`.
+- `docs/interview-talking-points.md`.
+- README portfolio deliverables index.
+
+Status:
+
+```text
+Completed for portfolio scope.
+```
