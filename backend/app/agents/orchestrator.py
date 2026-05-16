@@ -9,9 +9,10 @@ from app.api.schemas import ChatRequest, ChatResponse, Metrics, Source, TraceSte
 from app.services.macro_service import compose_macro_answer, get_macro_series, infer_macro_series, is_macro_question
 from app.services.metadata_service import record_request_log
 from app.services.rag_service import build_retrieval_chat_response
+from app.services.sql_analytics_service import analyze_financial_facts, infer_sql_request, is_sql_question
 
 
-RouteName = Literal["policy", "document", "macro", "macro_document", "unknown"]
+RouteName = Literal["policy", "document", "macro", "macro_document", "sql", "unknown"]
 
 
 class OrchestratorState(TypedDict, total=False):
@@ -39,6 +40,8 @@ def route_question(message: str) -> RouteName:
     lowered = message.lower()
     if _has_macro_document_intent(lowered):
         return "macro_document"
+    if is_sql_question(message):
+        return "sql"
     if is_macro_question(message):
         return "macro"
     if _has_policy_intent(lowered):
@@ -55,6 +58,7 @@ def _build_graph():
     graph.add_node("document", _document_research_node)
     graph.add_node("macro", _macro_analysis_node)
     graph.add_node("macro_document", _multi_agent_node)
+    graph.add_node("sql", _sql_analytics_node)
     graph.add_node("fallback", _fallback_node)
     graph.set_entry_point("router")
     graph.add_conditional_edges(
@@ -65,10 +69,11 @@ def _build_graph():
             "document": "document",
             "macro": "macro",
             "macro_document": "macro_document",
+            "sql": "sql",
             "unknown": "fallback",
         },
     )
-    for node_name in ("policy", "document", "macro", "macro_document", "fallback"):
+    for node_name in ("policy", "document", "macro", "macro_document", "sql", "fallback"):
         graph.add_edge(node_name, END)
     return graph.compile()
 
@@ -162,6 +167,25 @@ def _multi_agent_node(state: OrchestratorState) -> OrchestratorState:
         selected_agent="macro-document-orchestrator",
         step="synthesize",
         detail=f"Combined {len(series)} macro series with {len(sec_sources[:3])} SEC source(s).",
+    )
+
+
+def _sql_analytics_node(state: OrchestratorState) -> OrchestratorState:
+    sql_request = infer_sql_request(state["request"].message)
+    sql_response = analyze_financial_facts(sql_request)
+    response = ChatResponse(
+        answer=sql_response.answer,
+        agent="sql-analytics-agent",
+        sources=sql_response.sources,
+        trace=[],
+        metrics=_metrics(state),
+    )
+    return _with_response(
+        state,
+        response,
+        selected_agent="sql-analytics-agent",
+        step="sql_analytics",
+        detail=f"Queried {len(sql_response.facts)} structured financial fact(s).",
     )
 
 

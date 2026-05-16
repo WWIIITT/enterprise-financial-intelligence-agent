@@ -62,8 +62,21 @@ Use cases:
 
 Implementation notes:
 
-- Structured facts should be stored in PostgreSQL.
-- SQL Analytics Agent should query this structured layer rather than raw filings.
+- Sprint 6 stores structured facts in PostgreSQL.
+- The SQL Analytics Agent queries this structured layer rather than raw filings.
+- Live Company Facts requests require `SEC_USER_AGENT`.
+- If SEC live access is unavailable, the service uses deterministic AAPL sample facts for demo and tests.
+- Supported MVP metrics:
+  - revenue.
+  - net income.
+  - assets.
+  - liabilities.
+  - cash.
+  - operating cash flow.
+  - shares outstanding.
+- `/api/ingest/company-facts` ingests structured company facts.
+- `/api/sql/analyze` runs safe predefined query templates.
+- Raw SQL input and LLM-generated SQL are intentionally out of scope for Sprint 6.
 
 ## Internal Policy Documents
 

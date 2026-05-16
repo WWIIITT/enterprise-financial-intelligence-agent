@@ -41,8 +41,10 @@ The repo currently implements the core MVP foundation:
 - Provider embeddings with persistent Qdrant retrieval.
 - SEC EDGAR live filing ingestion.
 - FRED macro series analysis with PostgreSQL cache.
+- SEC Company Facts ingestion with PostgreSQL financial facts.
+- Safe SQL Analytics Agent with predefined query templates.
 - LangGraph deterministic workflow orchestration.
-- Evaluation suites for SEC, macro, and orchestrator routing.
+- Evaluation suites for SEC, macro, orchestrator, and SQL routing.
 
 The in-memory store remains only as a local development guard. Qdrant is the primary vector retrieval backend when configured.
 
@@ -58,6 +60,7 @@ router_node
   |-- policy -> Policy Compliance Agent -> policy RAG
   |-- document -> Document Research Agent -> SEC/document RAG
   |-- macro -> Macro Analysis Agent -> FRED/cache
+  |-- sql -> SQL Analytics Agent -> PostgreSQL financial facts
   |-- macro_document -> Macro + Document route -> FRED/cache + SEC RAG
   |-- unknown -> fallback -> retrieval/no-answer safeguards
   |
@@ -71,6 +74,7 @@ Routing is deterministic in Sprint 5 to avoid extra LLM cost and keep evaluation
 - SEC filings are fetched from EDGAR, saved as raw files, parsed, chunked, embedded, and indexed in Qdrant.
 - Policy documents are written as Markdown or PDF, chunked, embedded, and indexed in Qdrant.
 - Company financial facts are stored in PostgreSQL for SQL analytics.
+- SQL analytics requests use predefined metric templates and never accept raw SQL.
 - FRED macro series are fetched through the FRED API and cached for repeat analysis.
 - Every chat request records route, sources, latency, token usage, estimated cost, and errors.
 

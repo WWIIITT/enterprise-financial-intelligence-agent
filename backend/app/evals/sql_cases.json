@@ -1,0 +1,20 @@
+[
+  {
+    "id": "sql-revenue-route",
+    "suite": "sql-smoke",
+    "question": "Show Apple revenue trend from structured financial data",
+    "expected_agent": "sql-analytics-agent",
+    "required_source_type": "sql",
+    "required_answer_terms": ["AAPL", "Revenue"],
+    "required_citation_terms": ["SEC Company Facts"]
+  },
+  {
+    "id": "sql-net-income-route",
+    "suite": "sql-smoke",
+    "question": "Show Apple net income from company facts",
+    "expected_agent": "sql-analytics-agent",
+    "required_source_type": "sql",
+    "required_answer_terms": ["Net Income"],
+    "required_citation_terms": ["SEC Company Facts"]
+  }
+]

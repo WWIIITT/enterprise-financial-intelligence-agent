@@ -56,3 +56,23 @@ class MacroObservationRecord(Base):
     value: Mapped[float] = mapped_column(Float)
     source: Mapped[str] = mapped_column(String(80), default="FRED")
     fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class FinancialFactRecord(Base):
+    __tablename__ = "financial_facts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ticker: Mapped[str] = mapped_column(String(20), index=True)
+    cik: Mapped[str] = mapped_column(String(20), index=True)
+    company_name: Mapped[str] = mapped_column(String(255))
+    concept: Mapped[str] = mapped_column(String(120), index=True)
+    label: Mapped[str] = mapped_column(String(255))
+    unit: Mapped[str] = mapped_column(String(40))
+    fiscal_year: Mapped[int] = mapped_column(Integer, index=True)
+    fiscal_period: Mapped[str] = mapped_column(String(20), index=True)
+    form_type: Mapped[str] = mapped_column(String(20))
+    filed_date: Mapped[str] = mapped_column(String(20), index=True)
+    value: Mapped[float] = mapped_column(Float)
+    source: Mapped[str] = mapped_column(String(120), default="SEC Company Facts")
+    accession_number: Mapped[str] = mapped_column(String(80), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)

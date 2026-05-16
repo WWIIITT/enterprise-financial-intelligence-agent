@@ -48,6 +48,7 @@ Evaluation should measure more than whether the answer sounds good. Aurelia Ledg
 - `sec-smoke`: real SEC filing retrieval, citation, route, and unsupported-claim checks.
 - `macro-smoke`: FRED/sample macro series, macro routing, and macro citation checks.
 - `orchestrator-smoke`: LangGraph route selection and trace checks.
+- `sql-smoke`: structured financial facts, SQL route, and safe analytics checks.
 - `rag_factual`: factual questions requiring cited answers.
 - `macro_analysis`: FRED-based macro reasoning.
 - `policy_compliance`: internal policy QA.
@@ -86,3 +87,14 @@ Current checks:
 - Macro questions route to `macro-analysis-agent`.
 - Company + macro questions route to `macro-document-orchestrator`.
 - Unsupported questions use fallback or no-answer safeguards.
+
+## SQL Analytics Evaluation Cases
+
+Sprint 6 adds deterministic SQL analytics cases in `backend/app/evals/sql_cases.json`.
+
+Current checks:
+
+- Revenue and net income questions route to `sql-analytics-agent`.
+- SQL answers include ticker and metric context.
+- SQL sources cite SEC Company Facts.
+- Analytics uses predefined query templates rather than raw SQL.

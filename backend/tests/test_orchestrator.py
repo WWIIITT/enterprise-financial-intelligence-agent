@@ -18,6 +18,10 @@ def test_router_selects_macro_document_route() -> None:
     assert route_question("How do interest rates affect Apple valuation risk?") == "macro_document"
 
 
+def test_router_selects_sql_route() -> None:
+    assert route_question("Show Apple revenue trend from structured financial data") == "sql"
+
+
 def test_macro_response_uses_langgraph_trace(monkeypatch) -> None:
     monkeypatch.setattr("app.services.macro_service.initialize_database", lambda: False)
 
@@ -34,3 +38,14 @@ def test_fallback_response_uses_langgraph_trace() -> None:
 
     assert any(step.step == "route" for step in response.trace)
     assert response.agent in {"rag-orchestrator-empty-index", "rag-orchestrator-low-confidence", "rag-orchestrator"}
+
+
+def test_sql_response_uses_langgraph_trace(monkeypatch) -> None:
+    monkeypatch.setattr("app.services.sql_analytics_service.initialize_database", lambda: False)
+
+    response = build_orchestrated_chat_response(ChatRequest(message="Show Apple revenue trend from structured financial data"))
+
+    assert response.agent == "sql-analytics-agent"
+    assert any(step.step == "route" for step in response.trace)
+    assert any(step.step == "sql_analytics" for step in response.trace)
+    assert response.sources[0].source_type == "sql"

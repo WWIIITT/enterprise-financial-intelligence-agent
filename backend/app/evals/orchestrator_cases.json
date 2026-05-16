@@ -34,5 +34,13 @@
     "suite": "orchestrator-smoke",
     "question": "Explain unrelated quantum battery patents in detail.",
     "required_answer_terms": ["source"]
+  },
+  {
+    "id": "orchestrator-sql-route",
+    "suite": "orchestrator-smoke",
+    "question": "Show Apple revenue trend from structured financial data",
+    "expected_agent": "sql-analytics-agent",
+    "required_source_type": "sql",
+    "required_answer_terms": ["Revenue"]
   }
 ]

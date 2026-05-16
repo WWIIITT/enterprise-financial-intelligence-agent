@@ -13,6 +13,7 @@ from app.core.config import ROOT_DIR
 SEC_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "sec_filing_cases.json"
 MACRO_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "macro_cases.json"
 ORCHESTRATOR_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "orchestrator_cases.json"
+SQL_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "sql_cases.json"
 
 
 def run_evaluation_suite(request: EvalRunRequest) -> dict[str, object]:
@@ -42,6 +43,8 @@ def _load_cases(suite: str) -> list[dict[str, Any]]:
         paths.append(MACRO_CASES_PATH)
     if ORCHESTRATOR_CASES_PATH.exists():
         paths.append(ORCHESTRATOR_CASES_PATH)
+    if SQL_CASES_PATH.exists():
+        paths.append(SQL_CASES_PATH)
 
     cases: list[dict[str, Any]] = []
     for path in paths:

@@ -44,15 +44,16 @@
 
 ## SQL Analytics Agent
 
-對 PostgreSQL 裡的 structured financial data 做查詢
+對 PostgreSQL 裡的 structured financial facts 做 deterministic analytics
 
-資料例子:
+目前能力:
 
-- Company financial metrics
-- Industry classification
-- Revenue / margin changes
-- Balance sheet metrics
-- SEC Company Facts API derived tables
+- Ingest SEC Company Facts 或 sample financial facts
+- 儲存 revenue、net income、assets、liabilities、cash、operating cash flow、shares
+- 使用 safe query templates
+- 不接受 raw SQL
+- 不使用 LLM-generated SQL
+- 回傳 financial trend summary、facts、sources、trace
 
 ## Policy & Compliance Agent
 
@@ -72,7 +73,7 @@ Policy documents:
 
 目前能力:
 
-- 根據問題決定使用 Document Agent、Policy Agent、Macro Agent、Macro + Document route，或 fallback route
+- 根據問題決定使用 Document Agent、Policy Agent、Macro Agent、SQL Agent、Macro + Document route，或 fallback route
 - 記錄 route decision
 - 回傳 multi-step trace，讓使用者知道系統用了哪些工具和資料
 - 保留原有 `/api/chat` response shape，frontend 不需要大改
@@ -150,6 +151,7 @@ Data Pipeline:
 - Python ETL
 - pandas
 - SEC EDGAR API
+- SEC Company Facts API
 - FRED API
 
 LLMOps / Monitoring:
@@ -220,19 +222,13 @@ Observability Layer
 
 ## Sprint 1: Project Skeleton + RAG MVP Foundation
 
-目標:
-
-```text
-FastAPI + Docker services + basic RAG + citation answer + frontend demo
-```
-
-狀態:
+Status:
 
 ```text
 Mostly completed
 ```
 
-已完成:
+Completed:
 
 - FastAPI backend skeleton
 - React + TypeScript frontend
@@ -247,23 +243,16 @@ Mostly completed
 - Citation-shaped answer
 - Browser demo UI
 - System status panel
-- Request trace / metrics placeholder
 
 ## Sprint 2: Production-Grade RAG
 
-目標:
-
-```text
-real embeddings + persistent Qdrant + cleaner retrieval + better citations
-```
-
-狀態:
+Status:
 
 ```text
 Completed for MVP scope
 ```
 
-已完成:
+Completed:
 
 - Real embedding client
 - Provider embedding API key / base URL config
@@ -276,19 +265,13 @@ Completed for MVP scope
 
 ## Sprint 3: SEC EDGAR Live Ingestion
 
-目標:
-
-```text
-real SEC filing ingestion
-```
-
-狀態:
+Status:
 
 ```text
 Completed for MVP scope
 ```
 
-已完成:
+Completed:
 
 - SEC EDGAR connector
 - Ticker / CIK lookup
@@ -304,19 +287,13 @@ Completed for MVP scope
 
 ## Sprint 4: Macro Analysis Agent
 
-目標:
-
-```text
-FRED macro data analysis + macro-aware chat routing
-```
-
-狀態:
+Status:
 
 ```text
 Completed for MVP scope
 ```
 
-已完成:
+Completed:
 
 - FRED client with live API path
 - Deterministic sample fallback when `FRED_API_KEY` is missing
@@ -331,19 +308,13 @@ Completed for MVP scope
 
 ## Sprint 5: LangGraph Workflow Orchestrator
 
-目標:
-
-```text
-agent routing + multi-step trace
-```
-
-狀態:
+Status:
 
 ```text
 Completed for MVP scope
 ```
 
-已完成:
+Completed:
 
 - LangGraph `StateGraph` orchestrator
 - Deterministic router
@@ -358,32 +329,35 @@ Completed for MVP scope
 
 ## Sprint 6: SQL Analytics Agent
 
-目標:
+Status:
 
 ```text
-structured financial data analytics
+Completed for MVP scope
 ```
 
-計劃:
+Completed:
 
 - PostgreSQL financial facts schema
-- SEC Company Facts ingestion
-- SQL query tool
-- Safe SQL generation
-- Financial metrics analysis
-- Company / sector comparison
+- SEC Company Facts client
+- Deterministic AAPL sample fallback
+- `/api/ingest/company-facts`
+- `/api/sql/analyze`
+- Safe query templates with predefined metrics only
+- LangGraph SQL route
+- Frontend SQL Analytics controls
+- `sql-smoke` evaluation suite
 
 ## Sprint 7: LLMOps / Evaluation
 
-目標:
+Status:
 
 ```text
-evaluation + quality measurement
+Planned
 ```
 
-計劃:
+Planned:
 
-- Eval dataset
+- Eval dataset expansion
 - Retrieval recall
 - Citation correctness
 - Faithfulness score
@@ -394,13 +368,13 @@ evaluation + quality measurement
 
 ## Sprint 8: Security / Governance / Reliability
 
-目標:
+Status:
 
 ```text
-enterprise controls
+Planned
 ```
 
-計劃:
+Planned:
 
 - PII masking
 - Prompt injection detection
@@ -413,13 +387,13 @@ enterprise controls
 
 ## Sprint 9: Observability Dashboard
 
-目標:
+Status:
 
 ```text
-monitoring dashboard
+Planned
 ```
 
-計劃:
+Planned:
 
 - Token usage
 - Latency
@@ -431,13 +405,13 @@ monitoring dashboard
 
 ## Sprint 10: Architecture Pack / Portfolio Polish
 
-目標:
+Status:
 
 ```text
-Solution Architect deliverables
+Planned
 ```
 
-計劃:
+Planned:
 
 - Architecture diagram
 - Data flow diagram
@@ -457,6 +431,7 @@ Sprint 2: completed for MVP scope
 Sprint 3: completed for MVP scope
 Sprint 4: completed for MVP scope
 Sprint 5: completed for MVP scope
+Sprint 6: completed for MVP scope
 ```
 
 目前系統能力:
@@ -469,20 +444,21 @@ Sprint 5: completed for MVP scope
 - FRED macro series API
 - Macro analysis endpoint
 - LangGraph Workflow Orchestrator
-- Macro-aware and document-aware routing
-- Frontend demo for chat、ingestion、system status、SEC controls、macro controls
-- SEC、macro、orchestrator smoke evaluation suites
+- SQL Analytics Agent
+- SEC Company Facts sample/live ingestion
+- Frontend demo for chat、ingestion、system status、SEC controls、macro controls、SQL controls
+- SEC、macro、orchestrator、SQL smoke evaluation suites
 
 ## 下一個開發步驟
 
 ```text
-Start Sprint 6: SQL Analytics Agent
+Start Sprint 7: LLMOps / Evaluation
 ```
 
 下一步工作:
 
-1. 建立 PostgreSQL financial facts schema
-2. 接入 SEC Company Facts API
-3. 實作 safe SQL analytics service
-4. 建立 `/api/sql/analyze` 或類似 endpoint
-5. 加入 SQL Agent route 與 evaluation cases
+1. 擴充 evaluation dataset
+2. 加入 retrieval recall 和 citation correctness scoring
+3. 加入 faithfulness / hallucination checks
+4. 建立 batch eval report
+5. 補 latency 和 cost reporting

@@ -92,5 +92,54 @@ class MacroAnalyzeResponse(BaseModel):
     metrics: Metrics
 
 
+class CompanyFactsIngestRequest(BaseModel):
+    ticker: str = Field(default="AAPL", min_length=1)
+    cik: str | None = None
+    source: str = "sec-company-facts"
+    use_sample_fallback: bool = True
+
+
+class CompanyFactsIngestResponse(BaseModel):
+    status: str
+    ticker: str
+    cik: str
+    company_name: str
+    facts_indexed: int
+    source: str
+    message: str
+
+
+class FinancialFact(BaseModel):
+    ticker: str
+    cik: str
+    company_name: str
+    concept: str
+    label: str
+    unit: str
+    fiscal_year: int
+    fiscal_period: str
+    form_type: str
+    filed_date: str
+    value: float
+    source: str
+    accession_number: str = ""
+
+
+class SqlAnalyzeRequest(BaseModel):
+    ticker: str = Field(default="AAPL", min_length=1)
+    metric: str = Field(default="revenue", min_length=1)
+    period: str = Field(default="annual", pattern="^(annual|quarterly)$")
+    limit: int = Field(default=5, ge=1, le=20)
+
+
+class SqlAnalyzeResponse(BaseModel):
+    answer: str
+    agent: str
+    facts: list[FinancialFact]
+    sources: list[Source]
+    trace: list[TraceStep]
+    metrics: Metrics
+
+
 class EvalRunRequest(BaseModel):
     suite: str = "smoke"

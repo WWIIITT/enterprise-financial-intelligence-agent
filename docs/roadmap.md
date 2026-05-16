@@ -3,8 +3,8 @@
 ## Current Stage
 
 ```text
-Phase 5: LangGraph Workflow Orchestrator
-Current stage: Sprint 5 LangGraph orchestration is complete for MVP scope.
+Phase 6: SQL Analytics Agent
+Current stage: Sprint 6 SQL analytics is complete for MVP scope.
 ```
 
 Current completion:
@@ -15,6 +15,7 @@ Sprint 2: core completed for MVP scope
 Sprint 3: completed for MVP scope
 Sprint 4: completed for MVP scope
 Sprint 5: completed for MVP scope
+Sprint 6: completed for MVP scope
 ```
 
 ## Sprint 1: Project Skeleton + RAG MVP Foundation
@@ -164,17 +165,34 @@ Completed:
 Status:
 
 ```text
-Completed for MVP scope. Next step is Sprint 6 SQL Analytics Agent.
+Completed for MVP scope.
 ```
 
 ## Sprint 6: SQL Analytics Agent
 
+Goal:
+
+```text
+structured financial facts + safe SQL analytics
+```
+
+Completed:
+
 - PostgreSQL financial facts schema.
-- SEC Company Facts ingestion.
-- SQL query tool.
-- Safe SQL generation.
-- Financial metrics analysis.
-- Company / sector comparison.
+- SEC Company Facts client.
+- Deterministic AAPL sample fallback.
+- `POST /api/ingest/company-facts`.
+- `POST /api/sql/analyze`.
+- Safe query templates with predefined metrics only.
+- LangGraph `sql` route.
+- Frontend SQL Analytics controls.
+- `sql-smoke` evaluation suite.
+
+Status:
+
+```text
+Completed for MVP scope. Next step is Sprint 7 LLMOps / Evaluation.
+```
 
 ## Sprint 7: LLMOps / Evaluation
 

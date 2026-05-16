@@ -21,6 +21,7 @@ This repo currently contains a working Phase 1 / Sprint 1 foundation:
 - Sprint 3 SEC EDGAR live ingestion.
 - Sprint 4 Macro Analysis Agent with FRED/sample macro data.
 - Sprint 5 LangGraph Workflow Orchestrator.
+- Sprint 6 SQL Analytics Agent with SEC Company Facts sample/live ingestion.
 - Architecture, roadmap, data source, and evaluation documentation.
 
 The first production-grade target is still:
@@ -562,6 +563,56 @@ Invoke-RestMethod -Method Post http://localhost:8000/api/evals/run `
 
 The response trace should include `receive`, `route`, one agent step, and `respond`.
 
+## Sprint 6 SQL Analytics Runbook
+
+Sprint 6 adds structured financial facts and a safe SQL Analytics Agent. It does not accept raw SQL or use LLM-generated SQL.
+
+1. Ingest company facts:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/ingest/company-facts `
+  -ContentType "application/json" `
+  -Body '{"ticker":"AAPL","source":"sec-company-facts","use_sample_fallback":true}'
+```
+
+2. Analyze a metric:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/sql/analyze `
+  -ContentType "application/json" `
+  -Body '{"ticker":"AAPL","metric":"revenue","period":"annual","limit":5}'
+```
+
+Supported metrics:
+
+```text
+revenue
+net_income
+assets
+liabilities
+cash
+operating_cash_flow
+shares
+```
+
+3. Ask through the LangGraph chat workflow:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/chat `
+  -ContentType "application/json" `
+  -Body '{"message":"Show Apple revenue trend from structured financial data"}'
+```
+
+4. Run SQL evaluation:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/evals/run `
+  -ContentType "application/json" `
+  -Body '{"suite":"sql-smoke"}'
+```
+
+The browser UI includes a `SQL Analytics` panel for company facts ingestion and metric analysis.
+
 ## API
 
 ```text
@@ -570,8 +621,10 @@ POST /api/chat
 GET  /api/config/status
 POST /api/ingest/policy
 POST /api/ingest/sec
+POST /api/ingest/company-facts
 GET  /api/macro/series/{series_id}
 POST /api/macro/analyze
+POST /api/sql/analyze
 POST /api/evals/run
 ```
 

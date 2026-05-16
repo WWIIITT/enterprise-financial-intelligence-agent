@@ -71,6 +71,41 @@ type MacroAnalyzeResponse = {
   metrics: Metrics;
 };
 
+type CompanyFactsIngestResponse = {
+  status: string;
+  ticker: string;
+  cik: string;
+  company_name: string;
+  facts_indexed: number;
+  source: string;
+  message: string;
+};
+
+type FinancialFact = {
+  ticker: string;
+  cik: string;
+  company_name: string;
+  concept: string;
+  label: string;
+  unit: string;
+  fiscal_year: number;
+  fiscal_period: string;
+  form_type: string;
+  filed_date: string;
+  value: number;
+  source: string;
+  accession_number: string;
+};
+
+type SqlAnalyzeResponse = {
+  answer: string;
+  agent: string;
+  facts: FinancialFact[];
+  sources: Source[];
+  trace: TraceStep[];
+  metrics: Metrics;
+};
+
 const dataSources = ["SEC EDGAR", "FRED", "Internal Policies", "PostgreSQL", "Qdrant"];
 const macroSeriesOptions = [
   { id: "FEDFUNDS", label: "Fed Funds" },
@@ -100,6 +135,12 @@ function App() {
   const [macroResult, setMacroResult] = useState<MacroSeriesResponse | null>(null);
   const [macroAnalysis, setMacroAnalysis] = useState<MacroAnalyzeResponse | null>(null);
   const [macroLoading, setMacroLoading] = useState<"series" | "analysis" | null>(null);
+  const [sqlTicker, setSqlTicker] = useState("AAPL");
+  const [sqlMetric, setSqlMetric] = useState("revenue");
+  const [sqlPeriod, setSqlPeriod] = useState("annual");
+  const [sqlLoading, setSqlLoading] = useState<"ingest" | "analysis" | null>(null);
+  const [sqlIngestResult, setSqlIngestResult] = useState<CompanyFactsIngestResponse | null>(null);
+  const [sqlAnalysis, setSqlAnalysis] = useState<SqlAnalyzeResponse | null>(null);
 
   useEffect(() => {
     void loadConfigStatus();
@@ -261,6 +302,65 @@ function App() {
     }
   }
 
+  async function ingestCompanyFacts() {
+    setSqlLoading("ingest");
+    setError("");
+    try {
+      const apiResponse = await fetch("/api/ingest/company-facts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ticker: sqlTicker.trim() || "AAPL",
+          source: "sec-company-facts",
+          use_sample_fallback: true
+        })
+      });
+      if (!apiResponse.ok) {
+        throw new Error(`Company facts ingestion failed with status ${apiResponse.status}`);
+      }
+      const body = (await apiResponse.json()) as CompanyFactsIngestResponse;
+      setSqlIngestResult(body);
+      setQuestion(`Show ${body.ticker} ${sqlMetric.replace(/_/g, " ")} trend from structured financial data`);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Unable to ingest company facts.");
+    } finally {
+      setSqlLoading(null);
+    }
+  }
+
+  async function analyzeSqlMetrics() {
+    setSqlLoading("analysis");
+    setError("");
+    try {
+      const apiResponse = await fetch("/api/sql/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ticker: sqlTicker.trim() || "AAPL",
+          metric: sqlMetric,
+          period: sqlPeriod,
+          limit: 5
+        })
+      });
+      if (!apiResponse.ok) {
+        throw new Error(`SQL analytics request failed with status ${apiResponse.status}`);
+      }
+      const body = (await apiResponse.json()) as SqlAnalyzeResponse;
+      setSqlAnalysis(body);
+      setResponse({
+        answer: body.answer,
+        agent: body.agent,
+        sources: body.sources,
+        trace: body.trace,
+        metrics: body.metrics
+      });
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Unable to analyze SQL metrics.");
+    } finally {
+      setSqlLoading(null);
+    }
+  }
+
   const traceSteps = response?.trace ?? [
     { step: "receive", detail: "Waiting for a user question." },
     { step: "route", detail: "The backend will retrieve indexed policy or SEC evidence." },
@@ -279,6 +379,7 @@ function App() {
           <a href="#trace">Agent Trace</a>
           <a href="#sources">Data Sources</a>
           <a href="#macro">Macro</a>
+          <a href="#sql">SQL Analytics</a>
           <a href="#status">System Status</a>
           <a href="#evals">Evaluation</a>
         </nav>
@@ -470,6 +571,60 @@ function App() {
                 <strong>{macroAnalysis.agent}</strong>
                 <span>{macroAnalysis.series.map((item) => item.series_id).join(", ")}</span>
                 <small>{macroAnalysis.sources.length} cited macro sources</small>
+              </div>
+            ) : null}
+          </article>
+
+          <article id="sql" className="panel">
+            <div className="panel-title">
+              <Database size={20} />
+              <h3>SQL Analytics</h3>
+            </div>
+            <div className="macro-controls">
+              <label>
+                <span>Ticker</span>
+                <input value={sqlTicker} onChange={(event) => setSqlTicker(event.target.value.toUpperCase())} />
+              </label>
+              <label>
+                <span>Metric</span>
+                <select value={sqlMetric} onChange={(event) => setSqlMetric(event.target.value)}>
+                  <option value="revenue">Revenue</option>
+                  <option value="net_income">Net Income</option>
+                  <option value="assets">Assets</option>
+                  <option value="liabilities">Liabilities</option>
+                  <option value="cash">Cash</option>
+                  <option value="operating_cash_flow">Operating Cash Flow</option>
+                  <option value="shares">Shares</option>
+                </select>
+              </label>
+              <label>
+                <span>Period</span>
+                <select value={sqlPeriod} onChange={(event) => setSqlPeriod(event.target.value)}>
+                  <option value="annual">Annual</option>
+                  <option value="quarterly">Quarterly</option>
+                </select>
+              </label>
+              <button className="secondary-button" type="button" onClick={ingestCompanyFacts} disabled={sqlLoading !== null}>
+                {sqlLoading === "ingest" ? <Loader2 className="spin" size={18} /> : <PlayCircle size={18} />}
+                Ingest Company Facts
+              </button>
+              <button className="secondary-button" type="button" onClick={analyzeSqlMetrics} disabled={sqlLoading !== null}>
+                {sqlLoading === "analysis" ? <Loader2 className="spin" size={18} /> : <PlayCircle size={18} />}
+                Analyze SQL Metrics
+              </button>
+            </div>
+            {sqlIngestResult ? (
+              <div className="macro-result">
+                <strong>{sqlIngestResult.company_name}</strong>
+                <span>{sqlIngestResult.facts_indexed} structured facts indexed</span>
+                <small>{sqlIngestResult.source} / {sqlIngestResult.cik}</small>
+              </div>
+            ) : null}
+            {sqlAnalysis ? (
+              <div className="macro-result">
+                <strong>{sqlAnalysis.agent}</strong>
+                <span>{sqlAnalysis.facts.length} facts loaded for {sqlMetric.replace(/_/g, " ")}</span>
+                <small>{sqlAnalysis.sources.length} cited SQL sources</small>
               </div>
             ) : null}
           </article>
