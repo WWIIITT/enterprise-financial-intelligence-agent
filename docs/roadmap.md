@@ -3,8 +3,8 @@
 ## Current Stage
 
 ```text
-Phase 8: Security / Governance / Reliability
-Current stage: Sprint 8 deterministic guardrails are implemented for MVP scope.
+Phase 9: Observability Dashboard
+Current stage: Sprint 9 custom observability dashboard is implemented for MVP scope.
 ```
 
 Current completion:
@@ -18,6 +18,7 @@ Sprint 5: completed for MVP scope
 Sprint 6: completed for MVP scope
 Sprint 7: completed for MVP scope
 Sprint 8: completed for MVP scope
+Sprint 9: completed for MVP scope
 ```
 
 ## Sprint 1: Project Skeleton + RAG MVP Foundation
@@ -254,13 +255,29 @@ Completed for MVP scope. Next step is Sprint 9 Observability Dashboard.
 
 ## Sprint 9: Observability Dashboard
 
-- Token usage.
-- Latency.
-- Error rate.
-- Agent route.
-- Retrieval score.
-- Cost per request.
-- Prometheus / Grafana or custom UI.
+Goal:
+
+```text
+custom monitoring layer over request logs, eval runs, and security audits
+```
+
+Completed:
+
+- `GET /api/observability/summary`.
+- Request count, average latency, p95 latency, average sources, and estimated cost summary.
+- Agent route distribution.
+- Recent request logs.
+- Latest evaluation run summary.
+- Security action distribution.
+- Recent security audit events.
+- Frontend Observability Dashboard panel.
+- `observability-smoke` evaluation suite.
+
+Status:
+
+```text
+Completed for MVP scope. Next step is Sprint 10 Architecture Pack / Portfolio Polish.
+```
 
 ## Sprint 10: Architecture Pack / Portfolio Polish
 

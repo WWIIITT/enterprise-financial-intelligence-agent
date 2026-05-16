@@ -108,3 +108,13 @@ def test_security_eval_suite_loads(monkeypatch) -> None:
 
     assert result["status"] == "completed"
     assert result["metrics"]["cases_total"] >= 1
+
+
+def test_observability_eval_suite_loads(monkeypatch) -> None:
+    monkeypatch.setattr("app.services.eval_service._record_evaluation_run", lambda suite, metrics: True)
+
+    result = run_evaluation_suite(EvalRunRequest(suite="observability-smoke"))
+
+    assert result["status"] == "completed"
+    assert result["metrics"]["cases_total"] >= 1
+    assert result["results"][0]["agent"] == "observability-service"

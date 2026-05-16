@@ -47,6 +47,7 @@ The repo currently implements the core MVP foundation:
 - Evaluation suites for SEC, macro, orchestrator, and SQL routing.
 - Deterministic Evaluation Engine with markdown/json reports.
 - Deterministic Security / Governance preflight with PII masking and prompt injection blocking.
+- Custom Observability Dashboard over request logs, evaluation runs, and security audits.
 
 The in-memory store remains only as a local development guard. Qdrant is the primary vector retrieval backend when configured.
 
@@ -89,6 +90,20 @@ write audit record with message hash only when PostgreSQL is available
 
 Sprint 8 uses deterministic guardrails. It does not call a moderation API and does not store raw sensitive text in security audit records.
 
+## Observability Dashboard Flow
+
+```text
+/api/observability/summary
+  |
+read request_logs, evaluation_runs, security_audits
+  |
+aggregate latency, cost, route distribution, eval pass rate, and security actions
+  |
+return compact dashboard summary to React
+```
+
+Sprint 9 uses PostgreSQL as the observability store. Prometheus and Grafana remain optional future integrations.
+
 ## Evaluation Engine Flow
 
 ```text
@@ -118,6 +133,7 @@ Sprint 7 uses deterministic scoring only. LLM-as-judge is intentionally out of s
 - FRED macro series are fetched through the FRED API and cached for repeat analysis.
 - Every chat request records route, sources, latency, token usage, estimated cost, and errors.
 - Security preflight records message hash, risk level, action, and finding count without raw PII.
+- Observability summary reads request, evaluation, and security audit logs without creating new telemetry infrastructure.
 
 ## Governance Design
 

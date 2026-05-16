@@ -110,12 +110,19 @@ Policy documents:
 
 監控 runtime behavior 和 production signals
 
-- Token usage
-- Latency
-- Error rate
-- Agent route
-- Retrieval score
-- Cost per request
+目前能力:
+
+- Request count
+- Average latency
+- P95 latency
+- Average sources per request
+- Estimated total cost
+- Agent route distribution
+- Recent request logs
+- Latest evaluation run
+- Security action distribution
+- Recent security audit events
+- `observability-smoke` evaluation suite
 
 ## Architecture Pack
 
@@ -229,10 +236,10 @@ LangGraph Orchestrator
   |-- Evaluator Agent -> eval dataset / scoring
   |
 Observability Layer
-  |-- LangSmith / MLflow
-  |-- Prometheus
-  |-- Grafana
-  |-- Cost logs
+  |-- Request logs
+  |-- Evaluation runs
+  |-- Security audits
+  |-- Cost and latency summaries
 ```
 
 ## Complete Sprint Roadmap
@@ -413,18 +420,20 @@ Completed:
 Status:
 
 ```text
-Planned
+Completed for MVP scope
 ```
 
-Planned:
+Completed:
 
-- Token usage
-- Latency
-- Error rate
-- Agent route
-- Retrieval score
-- Cost per request
-- Prometheus / Grafana or custom UI
+- `/api/observability/summary`
+- Request count, average latency, p95 latency, average sources, estimated total cost
+- Agent route distribution
+- Recent request logs
+- Latest evaluation run summary
+- Security action distribution
+- Recent security audit events
+- Frontend Observability Dashboard panel
+- `observability-smoke` evaluation suite
 
 ## Sprint 10: Architecture Pack / Portfolio Polish
 
@@ -457,6 +466,7 @@ Sprint 5: completed for MVP scope
 Sprint 6: completed for MVP scope
 Sprint 7: completed for MVP scope
 Sprint 8: completed for MVP scope
+Sprint 9: completed for MVP scope
 ```
 
 目前系統能力:
@@ -474,19 +484,20 @@ Sprint 8: completed for MVP scope
 - Deterministic Evaluation Engine
 - Markdown / JSON evaluation reports
 - Security / Governance Guardrails
-- Frontend demo for chat、ingestion、system status、SEC controls、macro controls、SQL controls、governance controls
-- SEC、macro、orchestrator、SQL、security smoke evaluation suites
+- Observability Dashboard
+- Frontend demo for chat、ingestion、system status、SEC controls、macro controls、SQL controls、governance controls、observability controls
+- SEC、macro、orchestrator、SQL、security、observability smoke evaluation suites
 
 ## Next Development Step
 
 ```text
-Start Sprint 9: Observability Dashboard
+Start Sprint 10: Architecture Pack / Portfolio Polish
 ```
 
 下一步工作:
 
-1. 建立 request metrics API
-2. 顯示 route distribution
-3. 顯示 latency p50 / p95
-4. 顯示 error rate
-5. 顯示 estimated cost per request
+1. 補完整 architecture pack
+2. 建立 demo script
+3. 建立 interview talking points
+4. 補 cost estimate
+5. 補 risk register 和 deployment roadmap

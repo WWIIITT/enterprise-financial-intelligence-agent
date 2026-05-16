@@ -10,6 +10,7 @@ from app.api.schemas import ChatRequest, EvalRunRequest
 from app.core.config import ROOT_DIR
 from app.core.database import get_session_factory, initialize_database
 from app.models import EvaluationRunRecord
+from app.services.observability_service import get_observability_summary
 
 
 SEC_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "sec_filing_cases.json"
@@ -17,6 +18,7 @@ MACRO_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "macro_cases.json"
 ORCHESTRATOR_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "orchestrator_cases.json"
 SQL_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "sql_cases.json"
 SECURITY_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "security_cases.json"
+OBSERVABILITY_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "observability_cases.json"
 REPORT_DIR = ROOT_DIR / "data" / "reports"
 REPORT_MD_PATH = REPORT_DIR / "evaluation-report.md"
 REPORT_JSON_PATH = REPORT_DIR / "evaluation-report.json"
@@ -61,6 +63,8 @@ def _load_cases(suite: str) -> list[dict[str, Any]]:
         paths.append(SQL_CASES_PATH)
     if SECURITY_CASES_PATH.exists():
         paths.append(SECURITY_CASES_PATH)
+    if OBSERVABILITY_CASES_PATH.exists():
+        paths.append(OBSERVABILITY_CASES_PATH)
 
     cases: list[dict[str, Any]] = []
     for path in paths:
@@ -71,6 +75,9 @@ def _load_cases(suite: str) -> list[dict[str, Any]]:
 
 
 def _run_case(case: dict[str, Any]) -> dict[str, object]:
+    if case.get("endpoint") == "observability_summary":
+        return _run_observability_case(case)
+
     started = perf_counter()
     response = build_orchestrated_chat_response(ChatRequest(message=case["question"]))
     latency_ms = int((perf_counter() - started) * 1000)
@@ -96,6 +103,36 @@ def _run_case(case: dict[str, Any]) -> dict[str, object]:
         "scores": scores,
         "trace_steps": [step.step for step in response.trace],
         "hallucination_risk": hallucination_risk,
+    }
+
+
+def _run_observability_case(case: dict[str, Any]) -> dict[str, object]:
+    started = perf_counter()
+    response = get_observability_summary()
+    body = response.model_dump()
+    latency_ms = int((perf_counter() - started) * 1000)
+    failures: list[str] = []
+    scores = {
+        "route": None,
+        "source": None,
+        "citation": None,
+        "answer_terms": None,
+        "latency": _score_latency(case, latency_ms, failures),
+        "trace": None,
+        "schema": _score_response_schema(case, body, failures),
+    }
+
+    return {
+        "id": case["id"],
+        "category": case.get("category", case.get("suite", "uncategorized")),
+        "passed": not failures,
+        "failures": failures,
+        "agent": "observability-service",
+        "sources_count": 0,
+        "latency_ms": latency_ms,
+        "scores": scores,
+        "trace_steps": [],
+        "hallucination_risk": False,
     }
 
 
@@ -175,6 +212,28 @@ def _score_trace(case: dict[str, Any], response, failures: list[str]) -> float |
         else:
             failures.append(f"trace missing step {step}")
     return round(hits / len(expected_steps), 4) if expected_steps else None
+
+
+def _score_response_schema(case: dict[str, Any], body: dict[str, Any], failures: list[str]) -> float | None:
+    required_keys = case.get("required_response_keys", [])
+    required_values = case.get("required_value", {})
+    if not required_keys and not required_values:
+        return None
+    checks = 0
+    hits = 0
+    for key in required_keys:
+        checks += 1
+        if key in body:
+            hits += 1
+        else:
+            failures.append(f"response missing key {key}")
+    for key, expected in required_values.items():
+        checks += 1
+        if body.get(key) == expected:
+            hits += 1
+        else:
+            failures.append(f"response key {key} expected {expected}, got {body.get(key)}")
+    return round(hits / checks, 4) if checks else None
 
 
 def _apply_forbidden_terms(case: dict[str, Any], response, failures: list[str]) -> bool:

@@ -63,6 +63,7 @@ Sprint 7 uses deterministic scoring only. It does not use LLM-as-judge.
 - `orchestrator-smoke`: LangGraph route selection and trace checks.
 - `sql-smoke`: structured financial facts, SQL route, and safe analytics checks.
 - `security-smoke`: security preflight allow, mask, block, and trace checks.
+- `observability-smoke`: observability summary schema and empty-state checks.
 - `all`: runs every available deterministic eval case.
 - `rag_factual`: factual questions requiring cited answers.
 - `macro_analysis`: FRED-based macro reasoning.
@@ -125,6 +126,16 @@ Current checks:
 - Prompt injection requests are blocked by `security-governance-agent`.
 - Secret-like tokens do not appear in final answers.
 - Chat traces include `security_preflight`.
+
+## Observability Evaluation Cases
+
+Sprint 9 adds deterministic observability cases in `backend/app/evals/observability_cases.json`.
+
+Current checks:
+
+- Observability summary endpoint returns a stable schema.
+- Empty database state returns a valid dashboard response.
+- Summary includes request, route, evaluation, and security audit fields.
 
 ## Evaluation Report
 

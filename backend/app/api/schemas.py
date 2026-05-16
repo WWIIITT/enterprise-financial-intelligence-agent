@@ -167,3 +167,48 @@ class SqlAnalyzeResponse(BaseModel):
 
 class EvalRunRequest(BaseModel):
     suite: str = "smoke"
+
+
+class ObservabilityDistributionItem(BaseModel):
+    name: str
+    count: int
+    share: float
+
+
+class RecentRequestSummary(BaseModel):
+    selected_agent: str
+    sources_count: int
+    latency_ms: int
+    estimated_cost_usd: float
+    created_at: str
+
+
+class LatestEvaluationSummary(BaseModel):
+    suite: str
+    cases_total: int
+    cases_passed: int
+    pass_rate: float
+    latency_ms: int
+    created_at: str
+
+
+class RecentSecurityEvent(BaseModel):
+    risk_level: str
+    action: str
+    finding_count: int
+    agent: str
+    created_at: str
+
+
+class ObservabilitySummaryResponse(BaseModel):
+    status: str
+    request_count: int
+    latency_avg_ms: float
+    latency_p95_ms: int
+    average_sources: float
+    estimated_total_cost_usd: float
+    agent_routes: list[ObservabilityDistributionItem]
+    recent_requests: list[RecentRequestSummary]
+    latest_evaluation: LatestEvaluationSummary | None
+    security_actions: list[ObservabilityDistributionItem]
+    recent_security_events: list[RecentSecurityEvent]

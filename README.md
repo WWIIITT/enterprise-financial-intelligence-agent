@@ -702,12 +702,48 @@ Invoke-RestMethod -Method Post http://localhost:8000/api/evals/run `
 
 The browser UI includes a `System Status / Governance` panel for manual security checks.
 
+## Sprint 9 Observability Runbook
+
+Sprint 9 adds a custom observability dashboard backed by PostgreSQL request, evaluation, and security audit logs. It does not add Prometheus, Grafana, or a chart library.
+
+Load the observability summary:
+
+```powershell
+Invoke-RestMethod http://localhost:8000/api/observability/summary
+```
+
+Run observability evaluation:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/evals/run `
+  -ContentType "application/json" `
+  -Body '{"suite":"observability-smoke"}'
+```
+
+The summary includes:
+
+```text
+request_count
+latency_avg_ms
+latency_p95_ms
+average_sources
+estimated_total_cost_usd
+agent_routes
+recent_requests
+latest_evaluation
+security_actions
+recent_security_events
+```
+
+The browser UI includes an `Observability Dashboard` panel with route distribution, security action distribution, latency summary, latest eval pass rate, and recent requests.
+
 ## API
 
 ```text
 GET  /health
 POST /api/chat
 POST /api/security/check
+GET  /api/observability/summary
 GET  /api/config/status
 POST /api/ingest/policy
 POST /api/ingest/sec

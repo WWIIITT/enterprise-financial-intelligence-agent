@@ -153,6 +153,45 @@ type SecurityCheckResponse = {
   trace: TraceStep[];
 };
 
+type DistributionItem = {
+  name: string;
+  count: number;
+  share: number;
+};
+
+type ObservabilitySummary = {
+  status: string;
+  request_count: number;
+  latency_avg_ms: number;
+  latency_p95_ms: number;
+  average_sources: number;
+  estimated_total_cost_usd: number;
+  agent_routes: DistributionItem[];
+  recent_requests: Array<{
+    selected_agent: string;
+    sources_count: number;
+    latency_ms: number;
+    estimated_cost_usd: number;
+    created_at: string;
+  }>;
+  latest_evaluation: {
+    suite: string;
+    cases_total: number;
+    cases_passed: number;
+    pass_rate: number;
+    latency_ms: number;
+    created_at: string;
+  } | null;
+  security_actions: DistributionItem[];
+  recent_security_events: Array<{
+    risk_level: string;
+    action: string;
+    finding_count: number;
+    agent: string;
+    created_at: string;
+  }>;
+};
+
 const dataSources = ["SEC EDGAR", "FRED", "Internal Policies", "PostgreSQL", "Qdrant"];
 const macroSeriesOptions = [
   { id: "FEDFUNDS", label: "Fed Funds" },
@@ -195,9 +234,12 @@ function App() {
   const [securityMessage, setSecurityMessage] = useState("Contact analyst at test@example.com about Apple risk");
   const [securityLoading, setSecurityLoading] = useState(false);
   const [securityResult, setSecurityResult] = useState<SecurityCheckResponse | null>(null);
+  const [observabilityLoading, setObservabilityLoading] = useState(false);
+  const [observabilitySummary, setObservabilitySummary] = useState<ObservabilitySummary | null>(null);
 
   useEffect(() => {
     void loadConfigStatus();
+    void loadObservabilitySummary();
   }, []);
 
   async function submitQuestion(event: FormEvent<HTMLFormElement>) {
@@ -486,6 +528,23 @@ function App() {
     }
   }
 
+  async function loadObservabilitySummary() {
+    setObservabilityLoading(true);
+    setError("");
+    try {
+      const apiResponse = await fetch("/api/observability/summary");
+      if (!apiResponse.ok) {
+        throw new Error(`Observability summary failed with status ${apiResponse.status}`);
+      }
+      const body = (await apiResponse.json()) as ObservabilitySummary;
+      setObservabilitySummary(body);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Unable to load observability summary.");
+    } finally {
+      setObservabilityLoading(false);
+    }
+  }
+
   const traceSteps = response?.trace ?? [
     { step: "receive", detail: "Waiting for a user question." },
     { step: "route", detail: "The backend will retrieve indexed policy or SEC evidence." },
@@ -505,6 +564,7 @@ function App() {
           <a href="#sources">Data Sources</a>
           <a href="#macro">Macro</a>
           <a href="#sql">SQL Analytics</a>
+          <a href="#observability">Observability</a>
           <a href="#status">System Status</a>
           <a href="#evals">Evaluation</a>
         </nav>
@@ -664,6 +724,7 @@ function App() {
                   <option value="orchestrator-smoke">Orchestrator Smoke</option>
                   <option value="sql-smoke">SQL Smoke</option>
                   <option value="security-smoke">Security Smoke</option>
+                  <option value="observability-smoke">Observability Smoke</option>
                 </select>
               </label>
               <button className="secondary-button" type="button" onClick={runEvaluation} disabled={evalLoading !== null}>
@@ -786,6 +847,45 @@ function App() {
             ) : null}
           </article>
 
+          <article id="observability" className="panel panel-wide">
+            <div className="panel-title">
+              <Activity size={20} />
+              <h3>Observability Dashboard</h3>
+            </div>
+            <button className="secondary-button status-refresh" type="button" onClick={loadObservabilitySummary} disabled={observabilityLoading}>
+              {observabilityLoading ? <Loader2 className="spin" size={18} /> : null}
+              Refresh Observability
+            </button>
+            <dl className="metric-list metric-grid">
+              <div><dt>Requests</dt><dd>{observabilitySummary ? observabilitySummary.request_count : "waiting"}</dd></div>
+              <div><dt>Avg Latency</dt><dd>{observabilitySummary ? `${observabilitySummary.latency_avg_ms} ms` : "waiting"}</dd></div>
+              <div><dt>P95 Latency</dt><dd>{observabilitySummary ? `${observabilitySummary.latency_p95_ms} ms` : "waiting"}</dd></div>
+              <div><dt>Avg Sources</dt><dd>{observabilitySummary ? observabilitySummary.average_sources : "waiting"}</dd></div>
+              <div><dt>Est Cost</dt><dd>{observabilitySummary ? `$${observabilitySummary.estimated_total_cost_usd.toFixed(4)}` : "waiting"}</dd></div>
+              <div>
+                <dt>Latest Eval</dt>
+                <dd>{observabilitySummary?.latest_evaluation ? `${Math.round(observabilitySummary.latest_evaluation.pass_rate * 100)}%` : "waiting"}</dd>
+              </div>
+            </dl>
+            <div className="observability-grid">
+              <DistributionPanel title="Agent Routes" items={observabilitySummary?.agent_routes ?? []} />
+              <DistributionPanel title="Security Actions" items={observabilitySummary?.security_actions ?? []} />
+            </div>
+            <div className="recent-list">
+              <strong>Recent Requests</strong>
+              {(observabilitySummary?.recent_requests.length ?? 0) > 0 ? (
+                observabilitySummary?.recent_requests.slice(0, 5).map((item) => (
+                  <div className="recent-item" key={`${item.selected_agent}-${item.created_at}`}>
+                    <span>{item.selected_agent}</span>
+                    <small>{item.latency_ms} ms / {item.sources_count} sources</small>
+                  </div>
+                ))
+              ) : (
+                <p className="body-copy">No request logs yet.</p>
+              )}
+            </div>
+          </article>
+
           <article id="status" className="panel">
             <div className="panel-title">
               <ShieldCheck size={20} />
@@ -849,6 +949,29 @@ function App() {
         </section>
       </section>
     </main>
+  );
+}
+
+function DistributionPanel({ title, items }: { title: string; items: DistributionItem[] }) {
+  return (
+    <div className="distribution-panel">
+      <strong>{title}</strong>
+      {items.length ? (
+        items.map((item) => (
+          <div className="bar-row" key={item.name}>
+            <div>
+              <span>{item.name}</span>
+              <small>{item.count}</small>
+            </div>
+            <div className="bar-track">
+              <span style={{ width: `${Math.max(4, item.share * 100)}%` }} />
+            </div>
+          </div>
+        ))
+      ) : (
+        <p className="body-copy">No data yet.</p>
+      )}
+    </div>
   );
 }
 

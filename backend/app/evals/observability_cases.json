@@ -1,0 +1,33 @@
+[
+  {
+    "id": "observability-summary-schema",
+    "suite": "observability-smoke",
+    "category": "observability-smoke",
+    "endpoint": "observability_summary",
+    "required_response_keys": [
+      "status",
+      "request_count",
+      "latency_avg_ms",
+      "latency_p95_ms",
+      "agent_routes",
+      "recent_requests",
+      "latest_evaluation",
+      "security_actions",
+      "recent_security_events"
+    ],
+    "required_value": {
+      "status": "completed"
+    }
+  },
+  {
+    "id": "observability-empty-state-safe",
+    "suite": "observability-smoke",
+    "category": "observability-smoke",
+    "endpoint": "observability_summary",
+    "required_response_keys": [
+      "request_count",
+      "agent_routes",
+      "security_actions"
+    ]
+  }
+]
