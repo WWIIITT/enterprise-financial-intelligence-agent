@@ -573,7 +573,6 @@ function App() {
       <section className="workspace">
         <header className="topbar">
           <div>
-            <p className="eyebrow">Phase 1 RAG MVP</p>
             <h2>AI research, compliance, and macro intelligence workspace</h2>
           </div>
           <span className="status-pill">{response ? response.agent : "API-connected console"}</span>

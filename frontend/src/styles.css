@@ -22,8 +22,7 @@ textarea {
 }
 
 .app-shell {
-  display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
+  display: block;
   max-width: 100vw;
   min-width: 0;
   min-height: 100vh;
@@ -31,19 +30,21 @@ textarea {
 }
 
 .sidebar {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
   display: flex;
   flex-direction: column;
   gap: 40px;
-  align-self: start;
+  width: 300px;
   min-width: 0;
-  min-height: 100vh;
+  height: 100vh;
   max-width: 100vw;
   padding: 32px 24px 24px;
   color: #f7fbff;
   background: #18212f;
-  overflow: hidden;
+  overflow-y: auto;
+  z-index: 20;
 }
 
 .sidebar h1 {
@@ -89,6 +90,7 @@ textarea {
 
 .workspace {
   min-width: 0;
+  margin-left: 300px;
   padding: 28px;
 }
 
@@ -689,9 +691,11 @@ button:disabled {
   .sidebar {
     position: static;
     width: 100%;
+    height: auto;
     min-height: auto;
     gap: 20px;
     padding: 24px;
+    overflow: hidden;
   }
 
   .sidebar h1 {
@@ -714,6 +718,7 @@ button:disabled {
   }
 
   .workspace {
+    margin-left: 0;
     padding: 20px;
   }
 
