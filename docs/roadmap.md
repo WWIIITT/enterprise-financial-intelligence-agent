@@ -3,15 +3,16 @@
 ## Current Stage
 
 ```text
-Phase 2: RAG MVP
-Current stage: demo-grade RAG is working; production-grade retrieval is next.
+Phase 3: SEC EDGAR Live Ingestion
+Current stage: Sprint 2 production-grade RAG core is complete; live SEC ingestion is next.
 ```
 
 Current completion:
 
 ```text
 Sprint 1: 80-90% completed
-Sprint 2: Step 1 implemented; ready for provider verification
+Sprint 2: core completed for MVP scope
+Sprint 3: ready to start
 ```
 
 ## Sprint 1: Project Skeleton + RAG MVP Foundation
@@ -67,21 +68,29 @@ Planned:
 - Add real embedding client. Done.
 - Support separate embedding provider API key/base URL. Done.
 - Replace hash embedding with real embeddings. Done for Qdrant production path.
-- Use Qdrant as the primary retrieval backend. Done when Qdrant and `EMBEDDING_MODEL` are configured.
+- Use Qdrant as the primary retrieval backend. Done.
 - Store document metadata, chunk metadata, and request logs in PostgreSQL.
 - Improve chunking strategy.
 - Improve citation format.
 - Add reranking. Initial lightweight reranking done.
 - Add no-answer behavior when evidence is weak. Initial threshold behavior done.
 - Improve answer synthesis.
+- Validate Qdrant ingestion end to end with provider embeddings. Done.
+- Route Apple risk retrieval to SEC evidence only. Done.
+
+Status:
+
+```text
+Core complete for MVP scope. Retrieval quality hardening will continue in later sprints.
+```
+
+## Sprint 3: SEC EDGAR Live Ingestion
 
 Next task:
 
 ```text
-Start Docker Desktop, verify Qdrant ingestion end to end, then improve chunking and citation quality
+Implement SEC EDGAR live filing ingestion
 ```
-
-## Sprint 3: SEC EDGAR Live Ingestion
 
 - SEC EDGAR connector.
 - Ticker / CIK lookup.
@@ -89,7 +98,7 @@ Start Docker Desktop, verify Qdrant ingestion end to end, then improve chunking 
 - Raw filing storage under `data/raw/`.
 - Filing parser and text cleaner.
 - Chunk + embed + index.
-- SEC citations in answers.
+- SEC citations in answers with accession number, form type, filing date, and section.
 
 ## Sprint 4: Macro Analysis Agent
 
