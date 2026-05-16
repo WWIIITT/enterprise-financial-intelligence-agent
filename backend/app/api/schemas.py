@@ -68,9 +68,28 @@ class IngestResponse(BaseModel):
 
 class MacroSeriesResponse(BaseModel):
     series_id: str
+    title: str = ""
+    units: str = ""
     source: str
     observations: list[dict[str, str | float]]
+    summary: str = ""
+    cache_status: str = "unknown"
     message: str
+
+
+class MacroAnalyzeRequest(BaseModel):
+    series_ids: list[str] = Field(default_factory=lambda: ["FEDFUNDS", "CPIAUCSL", "UNRATE"])
+    question: str = Field(..., min_length=1)
+    limit: int = Field(default=8, ge=1, le=60)
+
+
+class MacroAnalyzeResponse(BaseModel):
+    answer: str
+    agent: str
+    series: list[MacroSeriesResponse]
+    sources: list[Source]
+    trace: list[TraceStep]
+    metrics: Metrics
 
 
 class EvalRunRequest(BaseModel):

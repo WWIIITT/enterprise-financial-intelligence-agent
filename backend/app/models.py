@@ -45,3 +45,14 @@ class RequestLogRecord(Base):
     latency_ms: Mapped[int] = mapped_column(Integer)
     estimated_cost_usd: Mapped[float] = mapped_column(Float, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class MacroObservationRecord(Base):
+    __tablename__ = "macro_observations"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    series_id: Mapped[str] = mapped_column(String(40), index=True)
+    date: Mapped[str] = mapped_column(String(20), index=True)
+    value: Mapped[float] = mapped_column(Float)
+    source: Mapped[str] = mapped_column(String(80), default="FRED")
+    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)

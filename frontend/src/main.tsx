@@ -51,7 +51,34 @@ type ConfigStatus = {
   sec_user_agent_configured: boolean;
 };
 
+type MacroSeriesResponse = {
+  series_id: string;
+  title: string;
+  units: string;
+  source: string;
+  observations: Array<{ date: string; value: number }>;
+  summary: string;
+  cache_status: string;
+  message: string;
+};
+
+type MacroAnalyzeResponse = {
+  answer: string;
+  agent: string;
+  series: MacroSeriesResponse[];
+  sources: Source[];
+  trace: TraceStep[];
+  metrics: Metrics;
+};
+
 const dataSources = ["SEC EDGAR", "FRED", "Internal Policies", "PostgreSQL", "Qdrant"];
+const macroSeriesOptions = [
+  { id: "FEDFUNDS", label: "Fed Funds" },
+  { id: "CPIAUCSL", label: "CPI" },
+  { id: "UNRATE", label: "Unemployment" },
+  { id: "GDP", label: "GDP" },
+  { id: "DGS10", label: "10Y Treasury" }
+];
 
 const defaultQuestion = "What does the AI Usage Policy say about approved use?";
 
@@ -69,6 +96,10 @@ function App() {
   const [secFormType, setSecFormType] = useState("10-K");
   const [secFilingYear, setSecFilingYear] = useState("");
   const [secAccessionNumber, setSecAccessionNumber] = useState("");
+  const [macroSeriesId, setMacroSeriesId] = useState("FEDFUNDS");
+  const [macroResult, setMacroResult] = useState<MacroSeriesResponse | null>(null);
+  const [macroAnalysis, setMacroAnalysis] = useState<MacroAnalyzeResponse | null>(null);
+  const [macroLoading, setMacroLoading] = useState<"series" | "analysis" | null>(null);
 
   useEffect(() => {
     void loadConfigStatus();
@@ -181,6 +212,55 @@ function App() {
     }
   }
 
+  async function loadMacroSeries() {
+    setMacroLoading("series");
+    setError("");
+    try {
+      const apiResponse = await fetch(`/api/macro/series/${macroSeriesId}`);
+      if (!apiResponse.ok) {
+        throw new Error(`Macro series request failed with status ${apiResponse.status}`);
+      }
+      const body = (await apiResponse.json()) as MacroSeriesResponse;
+      setMacroResult(body);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Unable to load macro series.");
+    } finally {
+      setMacroLoading(null);
+    }
+  }
+
+  async function analyzeMacroContext() {
+    setMacroLoading("analysis");
+    setError("");
+    const macroQuestion = question.trim() || "How do current rates and inflation affect Apple risk?";
+    try {
+      const apiResponse = await fetch("/api/macro/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          series_ids: ["FEDFUNDS", "CPIAUCSL", "UNRATE"],
+          question: macroQuestion
+        })
+      });
+      if (!apiResponse.ok) {
+        throw new Error(`Macro analysis request failed with status ${apiResponse.status}`);
+      }
+      const body = (await apiResponse.json()) as MacroAnalyzeResponse;
+      setMacroAnalysis(body);
+      setResponse({
+        answer: body.answer,
+        agent: body.agent,
+        sources: body.sources,
+        trace: body.trace,
+        metrics: body.metrics
+      });
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Unable to run macro analysis.");
+    } finally {
+      setMacroLoading(null);
+    }
+  }
+
   const traceSteps = response?.trace ?? [
     { step: "receive", detail: "Waiting for a user question." },
     { step: "route", detail: "The backend will retrieve indexed policy or SEC evidence." },
@@ -198,6 +278,7 @@ function App() {
           <a href="#chat">Chat Console</a>
           <a href="#trace">Agent Trace</a>
           <a href="#sources">Data Sources</a>
+          <a href="#macro">Macro</a>
           <a href="#status">System Status</a>
           <a href="#evals">Evaluation</a>
         </nav>
@@ -352,6 +433,45 @@ function App() {
               <div><dt>Token Cost</dt><dd>{response ? `$${response.metrics.estimated_cost_usd.toFixed(4)}` : "waiting"}</dd></div>
               <div><dt>Sources</dt><dd>{response ? response.sources.length : "waiting"}</dd></div>
             </dl>
+          </article>
+
+          <article id="macro" className="panel">
+            <div className="panel-title">
+              <Activity size={20} />
+              <h3>Macro Analysis</h3>
+            </div>
+            <div className="macro-controls">
+              <label>
+                <span>FRED Series</span>
+                <select value={macroSeriesId} onChange={(event) => setMacroSeriesId(event.target.value)}>
+                  {macroSeriesOptions.map((option) => (
+                    <option key={option.id} value={option.id}>{option.label}</option>
+                  ))}
+                </select>
+              </label>
+              <button className="secondary-button" type="button" onClick={loadMacroSeries} disabled={macroLoading !== null}>
+                {macroLoading === "series" ? <Loader2 className="spin" size={18} /> : <PlayCircle size={18} />}
+                Load Macro Series
+              </button>
+              <button className="secondary-button" type="button" onClick={analyzeMacroContext} disabled={macroLoading !== null}>
+                {macroLoading === "analysis" ? <Loader2 className="spin" size={18} /> : <PlayCircle size={18} />}
+                Analyze Macro Context
+              </button>
+            </div>
+            {macroResult ? (
+              <div className="macro-result">
+                <strong>{macroResult.title}</strong>
+                <span>{macroResult.summary}</span>
+                <small>{macroResult.source} / {macroResult.cache_status}</small>
+              </div>
+            ) : null}
+            {macroAnalysis ? (
+              <div className="macro-result">
+                <strong>{macroAnalysis.agent}</strong>
+                <span>{macroAnalysis.series.map((item) => item.series_id).join(", ")}</span>
+                <small>{macroAnalysis.sources.length} cited macro sources</small>
+              </div>
+            ) : null}
           </article>
 
           <article id="status" className="panel">

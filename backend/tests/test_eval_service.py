@@ -19,3 +19,21 @@ def test_eval_suite_returns_metrics(monkeypatch) -> None:
     assert result["status"] == "completed"
     assert result["metrics"]["cases_total"] >= 1
     assert result["metrics"]["pass_rate"] > 0
+
+
+def test_macro_eval_suite_returns_metrics(monkeypatch) -> None:
+    class FakeSource:
+        source_type = "macro"
+        citation = "FRED CPIAUCSL"
+
+    class FakeResponse:
+        answer = "## Macro Context\n- CPIAUCSL inflation trend\n## Sources"
+        agent = "macro-analysis-agent"
+        sources = [FakeSource()]
+
+    monkeypatch.setattr("app.services.eval_service.build_rag_chat_response", lambda request: FakeResponse())
+
+    result = run_evaluation_suite(EvalRunRequest(suite="macro-smoke"))
+
+    assert result["status"] == "completed"
+    assert result["metrics"]["cases_total"] >= 1

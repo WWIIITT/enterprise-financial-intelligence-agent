@@ -1,0 +1,28 @@
+[
+  {
+    "id": "macro-inflation-route",
+    "suite": "macro-smoke",
+    "question": "How is inflation trending based on CPI?",
+    "expected_agent": "macro-analysis-agent",
+    "required_source_type": "macro",
+    "required_answer_terms": ["Macro Context", "CPIAUCSL"],
+    "required_citation_terms": ["FRED CPIAUCSL"]
+  },
+  {
+    "id": "macro-apple-rate-linkage",
+    "suite": "macro-smoke",
+    "question": "How do interest rates affect Apple valuation risk?",
+    "required_source_type": "macro",
+    "required_answer_terms": ["Company Risk Linkage", "rates"],
+    "required_citation_terms": ["FRED FEDFUNDS"]
+  },
+  {
+    "id": "macro-unemployment-series",
+    "suite": "macro-smoke",
+    "question": "What does unemployment data suggest about macro risk?",
+    "expected_agent": "macro-analysis-agent",
+    "required_source_type": "macro",
+    "required_answer_terms": ["UNRATE", "Macro Context"],
+    "required_citation_terms": ["FRED UNRATE"]
+  }
+]

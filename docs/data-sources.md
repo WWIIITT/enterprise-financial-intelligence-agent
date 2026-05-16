@@ -37,8 +37,18 @@ Use cases:
 Implementation notes:
 
 - Live API access requires `FRED_API_KEY`.
-- MVP can start with cached sample macro data.
-- Later phases should cache series into PostgreSQL for repeatable analysis.
+- Sprint 4 supports live FRED observations when `FRED_API_KEY` is configured.
+- If the key is missing or FRED is unavailable, the app uses deterministic sample macro data for local demo and tests.
+- Supported MVP series:
+  - `FEDFUNDS`: Federal Funds Effective Rate.
+  - `CPIAUCSL`: Consumer Price Index.
+  - `UNRATE`: Unemployment Rate.
+  - `GDP`: Gross Domestic Product.
+  - `DGS10`: 10-Year Treasury Constant Maturity Rate.
+- Macro observations are cached in PostgreSQL for repeatable analysis.
+- `/api/macro/series/{series_id}` returns observations, summary, source, units, and cache status.
+- `/api/macro/analyze` combines selected macro series into a deterministic macro summary.
+- Macro-aware chat routing sends inflation, interest rate, unemployment, GDP, treasury, and yield questions to the Macro Analysis Agent.
 
 ## SEC Company Facts API
 

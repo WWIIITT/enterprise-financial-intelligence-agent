@@ -18,6 +18,8 @@ This repo currently contains a working Phase 1 / Sprint 1 foundation:
 - Local policy documents in `data/policies/`.
 - Basic local RAG ingestion and citation-shaped chat responses for development.
 - Sprint 2 provider embeddings for persistent Qdrant retrieval.
+- Sprint 3 SEC EDGAR live ingestion.
+- Sprint 4 Macro Analysis Agent with FRED/sample macro data.
 - Architecture, roadmap, data source, and evaluation documentation.
 
 The first production-grade target is still:
@@ -100,7 +102,7 @@ Environment variable reference:
 | `DATABASE_URL` | Yes | PostgreSQL connection string for metadata, chunks, and request logs. |
 | `QDRANT_URL` | Yes | Qdrant vector database URL. |
 | `REDIS_URL` | Later | Redis connection string for future queue/cache workflows. |
-| `FRED_API_KEY` | Later | FRED API key for macroeconomic data ingestion. |
+| `FRED_API_KEY` | Optional for Sprint 4 | FRED API key for live macroeconomic data. If empty, the app uses deterministic sample macro data. |
 | `SEC_USER_AGENT` | Yes before live SEC ingestion | Identifiable SEC EDGAR user agent, normally `your-name your-email@example.com`. |
 
 For Sprint 2 RAG, set `EMBEDDING_MODEL` to an embedding model supported by your OpenAI-compatible provider:
@@ -326,7 +328,7 @@ In the browser:
 
 1. Check `System Status`.
 2. Confirm LLM Provider, PostgreSQL, Qdrant, Redis, and SEC User Agent are `Ready`.
-3. `FRED API` can show `Later` during Sprint 1.
+3. `FRED API` can show `Later` if `FRED_API_KEY` is empty; Sprint 4 still works with sample macro data.
 4. Click `Ingest Policy Docs`.
 5. Click `Ingest SEC Sample`.
 6. Ask:
@@ -457,6 +459,64 @@ Invoke-RestMethod -Method Post http://localhost:8000/api/evals/run `
 
 The browser UI also includes live SEC controls for ticker, form type, filing year, and accession number in the Data Sources panel.
 
+## Sprint 4 Macro Analysis Runbook
+
+Sprint 4 adds FRED macro series, local cache, macro summaries, and macro-aware chat routing.
+
+1. Optional: set a live FRED API key in `.env`:
+
+```env
+FRED_API_KEY=your-fred-api-key
+```
+
+If this value is empty, the app uses deterministic sample macro data for local demo and tests.
+
+2. Start Docker and backend.
+
+3. Load a macro series:
+
+```powershell
+Invoke-RestMethod http://localhost:8000/api/macro/series/FEDFUNDS
+```
+
+Supported MVP series:
+
+```text
+FEDFUNDS
+CPIAUCSL
+UNRATE
+GDP
+DGS10
+```
+
+4. Run macro analysis:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/macro/analyze `
+  -ContentType "application/json" `
+  -Body '{"series_ids":["FEDFUNDS","CPIAUCSL","UNRATE"],"question":"How do current rates and inflation affect Apple risk?"}'
+```
+
+5. Ask through chat:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/chat `
+  -ContentType "application/json" `
+  -Body '{"message":"How do interest rates affect Apple valuation risk?"}'
+```
+
+Macro questions route to `macro-analysis-agent`. Company + macro questions can route to `macro-document-orchestrator` and combine FRED macro context with SEC filing evidence when SEC data is indexed.
+
+6. Run macro evaluation smoke cases:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/evals/run `
+  -ContentType "application/json" `
+  -Body '{"suite":"macro-smoke"}'
+```
+
+The browser UI includes a `Macro Analysis` panel with FRED series selection, series loading, and macro analysis controls.
+
 ## API
 
 ```text
@@ -466,6 +526,7 @@ GET  /api/config/status
 POST /api/ingest/policy
 POST /api/ingest/sec
 GET  /api/macro/series/{series_id}
+POST /api/macro/analyze
 POST /api/evals/run
 ```
 

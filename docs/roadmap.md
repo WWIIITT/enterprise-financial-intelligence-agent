@@ -3,8 +3,8 @@
 ## Current Stage
 
 ```text
-Phase 3: SEC EDGAR Live Ingestion
-Current stage: Sprint 2 production-grade RAG core is complete; live SEC ingestion is next.
+Phase 4: Macro Analysis Agent
+Current stage: Sprint 4 macro/FRED integration is complete for MVP scope.
 ```
 
 Current completion:
@@ -13,6 +13,7 @@ Current completion:
 Sprint 1: 80-90% completed
 Sprint 2: core completed for MVP scope
 Sprint 3: completed for MVP scope
+Sprint 4: completed for MVP scope
 ```
 
 ## Sprint 1: Project Skeleton + RAG MVP Foundation
@@ -111,19 +112,32 @@ Completed hardening:
 - Deterministic SEC risk answer synthesis.
 - SEC filing evaluation smoke cases.
 
-Next task:
-
-```text
-Start Sprint 4: Macro Analysis Agent
-```
-
 ## Sprint 4: Macro Analysis Agent
 
-- FRED API connector.
-- CPI, GDP, unemployment, interest rates.
-- Cached macro series.
-- Macro summary generation.
-- Company risk + macro question support.
+Goal:
+
+```text
+FRED macro data analysis + macro-aware chat routing
+```
+
+Completed:
+
+- FRED client with live API path.
+- Deterministic sample fallback when `FRED_API_KEY` is missing or FRED is unavailable.
+- Supported series: `FEDFUNDS`, `CPIAUCSL`, `UNRATE`, `GDP`, `DGS10`.
+- PostgreSQL macro observation cache.
+- `GET /api/macro/series/{series_id}`.
+- `POST /api/macro/analyze`.
+- Macro-aware chat routing to `macro-analysis-agent`.
+- Company + macro question support through `macro-document-orchestrator`.
+- Frontend Macro Analysis controls.
+- `macro-smoke` evaluation suite.
+
+Status:
+
+```text
+Completed for MVP scope. Next step is Sprint 5 LangGraph Workflow Orchestrator.
+```
 
 ## Sprint 5: LangGraph Workflow Orchestrator
 

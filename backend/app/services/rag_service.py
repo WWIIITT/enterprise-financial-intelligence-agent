@@ -5,6 +5,7 @@ from app.api.schemas import ChatRequest, ChatResponse, Metrics, Source, TraceSte
 from app.rag.embedding_client import EmbeddingConfigurationError, EmbeddingProviderError, embedding_client
 from app.rag.store import StoredChunk, rag_store, rank_chunks, score_chunks
 from app.rag.vector_store import QdrantVectorStoreError, qdrant_vector_store
+from app.services.macro_service import compose_macro_answer, get_macro_series, infer_macro_series, is_macro_question
 from app.services.metadata_service import record_request_log
 
 
@@ -14,6 +15,9 @@ MIN_LEXICAL_SCORE = 0.10
 
 def build_rag_chat_response(request: ChatRequest) -> ChatResponse:
     start = perf_counter()
+    if is_macro_question(request.message):
+        return _build_macro_chat_response(request, start)
+
     retrieved, retrieval_backend, top_score = _retrieve_chunks(request.message, limit=5)
 
     if not retrieved:
@@ -62,6 +66,53 @@ def build_rag_chat_response(request: ChatRequest) -> ChatResponse:
                 ),
             ),
             TraceStep(step="respond", detail="Returned citation-aware response shape."),
+        ],
+        metrics=Metrics(latency_ms=latency_ms),
+    )
+    record_request_log(request.message, response.agent, len(response.sources), latency_ms)
+    return response
+
+
+def _build_macro_chat_response(request: ChatRequest, start: float) -> ChatResponse:
+    series = [get_macro_series(series_id, limit=8) for series_id in infer_macro_series(request.message)]
+    retrieved: list[StoredChunk] = []
+    retrieval_backend = "macro-only"
+    top_score = 0.0
+    if _looks_like_company_macro_question(request.message):
+        retrieved, retrieval_backend, top_score = _retrieve_chunks(request.message, limit=3)
+        retrieved = [chunk for chunk in retrieved if chunk.source_type == "sec"]
+
+    sec_citations = [chunk.citation for chunk in retrieved if chunk.citation]
+    answer = compose_macro_answer(request.message, series, sec_citations=sec_citations)
+    sources = [
+        Source(
+            title=item.title or item.series_id,
+            url=f"https://fred.stlouisfed.org/series/{item.series_id}",
+            citation=f"FRED {item.series_id}",
+            source_type="macro",
+        )
+        for item in series
+    ]
+    sources.extend(
+        Source(title=chunk.title, url=chunk.url, citation=chunk.citation, source_type=chunk.source_type)
+        for chunk in retrieved[:3]
+    )
+    latency_ms = int((perf_counter() - start) * 1000)
+    response = ChatResponse(
+        answer=answer,
+        agent="macro-analysis-agent" if not retrieved else "macro-document-orchestrator",
+        sources=sources,
+        trace=[
+            TraceStep(step="receive", detail=f"Received {len(request.message)} characters."),
+            TraceStep(step="macro", detail=f"Loaded {len(series)} macro series from FRED/cache/sample data."),
+            TraceStep(
+                step="retrieve",
+                detail=(
+                    f"Retrieved {len(retrieved)} SEC chunks using {retrieval_backend}; "
+                    f"top score {top_score:.3f}."
+                ),
+            ),
+            TraceStep(step="respond", detail="Returned macro-aware response with citations."),
         ],
         metrics=Metrics(latency_ms=latency_ms),
     )
@@ -141,6 +192,11 @@ def _query_source_intent(query: str) -> str | None:
     if terms.intersection(policy_terms):
         return "policy"
     return None
+
+
+def _looks_like_company_macro_question(query: str) -> bool:
+    lowered = query.lower()
+    return any(term in lowered for term in ("apple", "aapl", "company", "valuation", "revenue"))
 
 
 def _source_intent_bonus(source_intent: str | None, chunk: StoredChunk) -> float:

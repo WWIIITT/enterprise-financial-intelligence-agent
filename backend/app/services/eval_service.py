@@ -11,6 +11,7 @@ from app.services.rag_service import build_rag_chat_response
 
 
 SEC_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "sec_filing_cases.json"
+MACRO_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "macro_cases.json"
 
 
 def run_evaluation_suite(request: EvalRunRequest) -> dict[str, object]:
@@ -35,8 +36,14 @@ def run_evaluation_suite(request: EvalRunRequest) -> dict[str, object]:
 
 
 def _load_cases(suite: str) -> list[dict[str, Any]]:
-    with SEC_CASES_PATH.open(encoding="utf-8") as handle:
-        cases = json.load(handle)
+    paths = [SEC_CASES_PATH]
+    if MACRO_CASES_PATH.exists():
+        paths.append(MACRO_CASES_PATH)
+
+    cases: list[dict[str, Any]] = []
+    for path in paths:
+        with path.open(encoding="utf-8") as handle:
+            cases.extend(json.load(handle))
     selected = [case for case in cases if suite in {"all", case.get("suite")}]
     return selected or cases
 

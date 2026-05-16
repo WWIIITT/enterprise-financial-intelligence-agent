@@ -7,11 +7,14 @@ from app.api.schemas import (
     EvalRunRequest,
     IngestResponse,
     IngestRequest,
+    MacroAnalyzeRequest,
+    MacroAnalyzeResponse,
     MacroSeriesResponse,
 )
 from app.services.config_service import get_config_status
 from app.services.eval_service import run_evaluation_suite
 from app.services.ingestion_service import ingest_policy_documents, ingest_sec_document
+from app.services.macro_service import analyze_macro_context, get_macro_series
 from app.services.rag_service import build_rag_chat_response
 
 
@@ -49,12 +52,18 @@ def ingest_sec(request: IngestRequest) -> IngestResponse:
 
 @router.get("/macro/series/{series_id}", response_model=MacroSeriesResponse)
 def macro_series(series_id: str) -> MacroSeriesResponse:
-    return MacroSeriesResponse(
-        series_id=series_id,
-        source="FRED",
-        observations=[],
-        message="Macro data connector placeholder. Add FRED_API_KEY to enable live ingestion.",
-    )
+    try:
+        return get_macro_series(series_id)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@router.post("/macro/analyze", response_model=MacroAnalyzeResponse)
+def macro_analyze(request: MacroAnalyzeRequest) -> MacroAnalyzeResponse:
+    try:
+        return analyze_macro_context(request)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @router.post("/evals/run")
