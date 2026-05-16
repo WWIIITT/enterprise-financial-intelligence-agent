@@ -11,7 +11,7 @@ React Frontend
   |
 FastAPI Gateway
   |
-Auth / RBAC / Request Logger
+Security Preflight / Request Logger
   |
 LangGraph Orchestrator
   |
@@ -46,6 +46,7 @@ The repo currently implements the core MVP foundation:
 - LangGraph deterministic workflow orchestration.
 - Evaluation suites for SEC, macro, orchestrator, and SQL routing.
 - Deterministic Evaluation Engine with markdown/json reports.
+- Deterministic Security / Governance preflight with PII masking and prompt injection blocking.
 
 The in-memory store remains only as a local development guard. Qdrant is the primary vector retrieval backend when configured.
 
@@ -53,6 +54,8 @@ The in-memory store remains only as a local development guard. Qdrant is the pri
 
 ```text
 /api/chat
+  |
+security_preflight
   |
 receive
   |
@@ -69,6 +72,22 @@ respond with answer, sources, route trace, and metrics
 ```
 
 Routing is deterministic in Sprint 5 to avoid extra LLM cost and keep evaluation repeatable.
+
+## Security / Governance Flow
+
+```text
+/api/security/check or /api/chat
+  |
+detect PII and prompt injection patterns
+  |
+  |-- allow -> continue normal workflow
+  |-- mask -> replace sensitive values, then route masked message
+  |-- block -> return security-governance-agent response
+  |
+write audit record with message hash only when PostgreSQL is available
+```
+
+Sprint 8 uses deterministic guardrails. It does not call a moderation API and does not store raw sensitive text in security audit records.
 
 ## Evaluation Engine Flow
 
@@ -98,13 +117,19 @@ Sprint 7 uses deterministic scoring only. LLM-as-judge is intentionally out of s
 - SQL analytics requests use predefined metric templates and never accept raw SQL.
 - FRED macro series are fetched through the FRED API and cached for repeat analysis.
 - Every chat request records route, sources, latency, token usage, estimated cost, and errors.
+- Security preflight records message hash, risk level, action, and finding count without raw PII.
 
 ## Governance Design
 
+Current governance controls:
+
+- PII masking before agent routing.
+- Prompt injection detection for user input.
+- Security audit records without raw sensitive text.
+- Security evaluation suite for allow, mask, and block behavior.
+
 Planned governance controls:
 
-- PII masking before model calls.
-- Prompt injection detection for retrieved documents and user input.
 - Role-based access control for restricted data.
 - Audit logs for research, compliance, and client-facing workflows.
 - Evaluation reports for faithfulness, retrieval quality, latency, and cost.

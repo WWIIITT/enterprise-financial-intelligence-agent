@@ -3,8 +3,8 @@
 ## Current Stage
 
 ```text
-Phase 7: LLMOps / Evaluation Engine
-Current stage: Sprint 7 deterministic evaluation engine is complete for MVP scope.
+Phase 8: Security / Governance / Reliability
+Current stage: Sprint 8 deterministic guardrails are implemented for MVP scope.
 ```
 
 Current completion:
@@ -17,6 +17,7 @@ Sprint 4: completed for MVP scope
 Sprint 5: completed for MVP scope
 Sprint 6: completed for MVP scope
 Sprint 7: completed for MVP scope
+Sprint 8: completed for MVP scope
 ```
 
 ## Sprint 1: Project Skeleton + RAG MVP Foundation
@@ -225,14 +226,31 @@ Completed for MVP scope. Next step is Sprint 8 Security / Governance / Reliabili
 
 ## Sprint 8: Security / Governance / Reliability
 
-- PII masking.
-- Prompt injection detection.
-- RBAC.
-- Audit logs.
-- Retry / timeout.
-- Model fallback.
-- Data retention policy.
-- Human approval path.
+Goal:
+
+```text
+deterministic security preflight + governance checks + security eval
+```
+
+Completed:
+
+- Sprint 7 SEC eval expectation cleanup.
+- Deterministic security guardrail service.
+- PII masking for email, phone, SSN, payment card-like values, and secret-like tokens.
+- Prompt injection detection for policy bypass, hidden prompt extraction, and secret exfiltration requests.
+- `/api/security/check`.
+- `/api/chat` security preflight before LangGraph routing.
+- Blocked request response through `security-governance-agent`.
+- Masked request routing with redacted user input.
+- Security audit records with message hash only.
+- Frontend System Status / Governance controls.
+- `security-smoke` evaluation suite.
+
+Status:
+
+```text
+Completed for MVP scope. Next step is Sprint 9 Observability Dashboard.
+```
 
 ## Sprint 9: Observability Dashboard
 

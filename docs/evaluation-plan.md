@@ -62,6 +62,7 @@ Sprint 7 uses deterministic scoring only. It does not use LLM-as-judge.
 - `macro-smoke`: FRED/sample macro series, macro routing, and macro citation checks.
 - `orchestrator-smoke`: LangGraph route selection and trace checks.
 - `sql-smoke`: structured financial facts, SQL route, and safe analytics checks.
+- `security-smoke`: security preflight allow, mask, block, and trace checks.
 - `all`: runs every available deterministic eval case.
 - `rag_factual`: factual questions requiring cited answers.
 - `macro_analysis`: FRED-based macro reasoning.
@@ -112,6 +113,18 @@ Current checks:
 - SQL answers include ticker and metric context.
 - SQL sources cite SEC Company Facts.
 - Analytics uses predefined query templates rather than raw SQL.
+
+## Security Evaluation Cases
+
+Sprint 8 adds deterministic security cases in `backend/app/evals/security_cases.json`.
+
+Current checks:
+
+- Benign finance questions continue through normal agent routing.
+- PII-like values are masked before routing.
+- Prompt injection requests are blocked by `security-governance-agent`.
+- Secret-like tokens do not appear in final answers.
+- Chat traces include `security_preflight`.
 
 ## Evaluation Report
 

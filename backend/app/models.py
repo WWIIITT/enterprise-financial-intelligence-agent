@@ -47,6 +47,19 @@ class RequestLogRecord(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
 
+class SecurityAuditRecord(Base):
+    __tablename__ = "security_audits"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    message_hash: Mapped[str] = mapped_column(String(64), index=True)
+    role: Mapped[str] = mapped_column(String(80), default="research_analyst")
+    risk_level: Mapped[str] = mapped_column(String(20), index=True)
+    action: Mapped[str] = mapped_column(String(20), index=True)
+    finding_count: Mapped[int] = mapped_column(Integer)
+    agent: Mapped[str] = mapped_column(String(100), default="security-governance-agent")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
 class MacroObservationRecord(Base):
     __tablename__ = "macro_observations"
 

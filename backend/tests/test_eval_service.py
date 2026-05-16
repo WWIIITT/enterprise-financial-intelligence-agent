@@ -90,3 +90,21 @@ def test_generate_report_returns_markdown(monkeypatch) -> None:
     assert report["status"] == "completed"
     assert "# Evaluation Report" in report["markdown"]
     assert "pass_rate" in report["summary"]
+
+
+def test_security_eval_suite_loads(monkeypatch) -> None:
+    response = FakeResponse(
+        answer="## Summary\nThis request was blocked by governance.",
+        agent="security-governance-agent",
+        source_type="",
+        citation="",
+    )
+    response.sources = []
+    response.trace = [TraceStep(step="security_preflight", detail="blocked")]
+    monkeypatch.setattr("app.services.eval_service.build_orchestrated_chat_response", lambda request: response)
+    monkeypatch.setattr("app.services.eval_service._record_evaluation_run", lambda suite, metrics: True)
+
+    result = run_evaluation_suite(EvalRunRequest(suite="security-smoke"))
+
+    assert result["status"] == "completed"
+    assert result["metrics"]["cases_total"] >= 1

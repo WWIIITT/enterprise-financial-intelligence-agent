@@ -167,6 +167,11 @@ textarea {
   resize: vertical;
 }
 
+.security-check textarea {
+  min-height: 120px;
+  margin-bottom: 0;
+}
+
 input,
 select {
   width: 100%;
@@ -468,6 +473,95 @@ button:disabled {
   display: grid;
   gap: 10px;
   margin-top: 16px;
+}
+
+.security-check {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #edf1f5;
+}
+
+.security-check label {
+  display: grid;
+  gap: 6px;
+}
+
+.security-check label span {
+  color: #6d7d8f;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.security-result {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #d7e7ee;
+  border-radius: 8px;
+  background: #f3fbfd;
+}
+
+.security-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.security-summary strong {
+  color: #243449;
+  text-transform: uppercase;
+}
+
+.risk-pill {
+  width: fit-content;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.risk-low {
+  color: #17633b;
+  background: #e7f7ee;
+}
+
+.risk-medium {
+  color: #70550f;
+  background: #fff5d6;
+}
+
+.risk-high {
+  color: #9a2f2f;
+  background: #fdecec;
+}
+
+.security-result span,
+.security-result small {
+  color: #4f5e70;
+  line-height: 1.45;
+}
+
+.security-result code {
+  display: block;
+  padding: 10px;
+  border-radius: 6px;
+  color: #243449;
+  background: #ffffff;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.security-result ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 20px;
+  color: #36485f;
 }
 
 .status-row {

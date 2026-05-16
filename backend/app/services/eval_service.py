@@ -16,6 +16,7 @@ SEC_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "sec_filing_cases.json
 MACRO_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "macro_cases.json"
 ORCHESTRATOR_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "orchestrator_cases.json"
 SQL_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "sql_cases.json"
+SECURITY_CASES_PATH = ROOT_DIR / "backend" / "app" / "evals" / "security_cases.json"
 REPORT_DIR = ROOT_DIR / "data" / "reports"
 REPORT_MD_PATH = REPORT_DIR / "evaluation-report.md"
 REPORT_JSON_PATH = REPORT_DIR / "evaluation-report.json"
@@ -58,6 +59,8 @@ def _load_cases(suite: str) -> list[dict[str, Any]]:
         paths.append(ORCHESTRATOR_CASES_PATH)
     if SQL_CASES_PATH.exists():
         paths.append(SQL_CASES_PATH)
+    if SECURITY_CASES_PATH.exists():
+        paths.append(SECURITY_CASES_PATH)
 
     cases: list[dict[str, Any]] = []
     for path in paths:

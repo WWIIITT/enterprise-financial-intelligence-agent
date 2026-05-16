@@ -12,6 +12,8 @@ from app.api.schemas import (
     MacroAnalyzeRequest,
     MacroAnalyzeResponse,
     MacroSeriesResponse,
+    SecurityCheckRequest,
+    SecurityCheckResponse,
     SqlAnalyzeRequest,
     SqlAnalyzeResponse,
 )
@@ -20,6 +22,7 @@ from app.services.config_service import get_config_status
 from app.services.eval_service import generate_evaluation_report, run_evaluation_suite
 from app.services.ingestion_service import ingest_policy_documents, ingest_sec_document
 from app.services.macro_service import analyze_macro_context, get_macro_series
+from app.services.security_service import run_security_check
 from app.services.sql_analytics_service import analyze_financial_facts, ingest_company_facts
 
 
@@ -32,6 +35,11 @@ def chat(request: ChatRequest) -> ChatResponse:
         return build_orchestrated_chat_response(request)
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@router.post("/security/check", response_model=SecurityCheckResponse)
+def security_check(request: SecurityCheckRequest) -> SecurityCheckResponse:
+    return run_security_check(request)
 
 
 @router.get("/config/status", response_model=ConfigStatusResponse)

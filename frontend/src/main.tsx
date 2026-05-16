@@ -136,6 +136,23 @@ type EvalReportResponse = {
   report_paths: { markdown: string; json: string };
 };
 
+type SecurityCheckResponse = {
+  status: string;
+  risk_level: string;
+  action: string;
+  masked_message: string;
+  findings: Array<{
+    category: string;
+    finding_type: string;
+    severity: string;
+    description: string;
+    replacement: string | null;
+  }>;
+  policy_tags: string[];
+  recommended_handling: string;
+  trace: TraceStep[];
+};
+
 const dataSources = ["SEC EDGAR", "FRED", "Internal Policies", "PostgreSQL", "Qdrant"];
 const macroSeriesOptions = [
   { id: "FEDFUNDS", label: "Fed Funds" },
@@ -175,6 +192,9 @@ function App() {
   const [evalLoading, setEvalLoading] = useState<"run" | "report" | null>(null);
   const [evalSummary, setEvalSummary] = useState<EvalSummary | null>(null);
   const [evalReportPath, setEvalReportPath] = useState("");
+  const [securityMessage, setSecurityMessage] = useState("Contact analyst at test@example.com about Apple risk");
+  const [securityLoading, setSecurityLoading] = useState(false);
+  const [securityResult, setSecurityResult] = useState<SecurityCheckResponse | null>(null);
 
   useEffect(() => {
     void loadConfigStatus();
@@ -439,6 +459,33 @@ function App() {
     }
   }
 
+  async function runSecurityCheck() {
+    const trimmedMessage = securityMessage.trim();
+    if (!trimmedMessage) {
+      setError("Enter a message before running the security check.");
+      return;
+    }
+
+    setSecurityLoading(true);
+    setError("");
+    try {
+      const apiResponse = await fetch("/api/security/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: trimmedMessage, role: "research_analyst" })
+      });
+      if (!apiResponse.ok) {
+        throw new Error(`Security check failed with status ${apiResponse.status}`);
+      }
+      const body = (await apiResponse.json()) as SecurityCheckResponse;
+      setSecurityResult(body);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Unable to run security check.");
+    } finally {
+      setSecurityLoading(false);
+    }
+  }
+
   const traceSteps = response?.trace ?? [
     { step: "receive", detail: "Waiting for a user question." },
     { step: "route", detail: "The backend will retrieve indexed policy or SEC evidence." },
@@ -616,6 +663,7 @@ function App() {
                   <option value="macro-smoke">Macro Smoke</option>
                   <option value="orchestrator-smoke">Orchestrator Smoke</option>
                   <option value="sql-smoke">SQL Smoke</option>
+                  <option value="security-smoke">Security Smoke</option>
                 </select>
               </label>
               <button className="secondary-button" type="button" onClick={runEvaluation} disabled={evalLoading !== null}>
@@ -741,7 +789,7 @@ function App() {
           <article id="status" className="panel">
             <div className="panel-title">
               <ShieldCheck size={20} />
-              <h3>System Status</h3>
+              <h3>System Status / Governance</h3>
             </div>
             <button className="secondary-button status-refresh" type="button" onClick={loadConfigStatus} disabled={isConfigLoading}>
               {isConfigLoading ? <Loader2 className="spin" size={18} /> : null}
@@ -762,6 +810,40 @@ function App() {
               ) : (
                 <p className="body-copy">Waiting for backend config status.</p>
               )}
+            </div>
+            <div className="security-check">
+              <label>
+                <span>Security Check</span>
+                <textarea
+                  aria-label="Security check message"
+                  value={securityMessage}
+                  onChange={(event) => setSecurityMessage(event.target.value)}
+                />
+              </label>
+              <button className="secondary-button" type="button" onClick={runSecurityCheck} disabled={securityLoading}>
+                {securityLoading ? <Loader2 className="spin" size={18} /> : <ShieldCheck size={18} />}
+                Run Security Check
+              </button>
+              {securityResult ? (
+                <div className="security-result">
+                  <div className="security-summary">
+                    <span className={`risk-pill risk-${securityResult.risk_level}`}>{securityResult.risk_level}</span>
+                    <strong>{securityResult.action}</strong>
+                  </div>
+                  <span>{securityResult.recommended_handling}</span>
+                  <small>{securityResult.policy_tags.join(", ") || "no policy tags"}</small>
+                  {securityResult.action !== "allow" ? <code>{securityResult.masked_message}</code> : null}
+                  {securityResult.findings.length ? (
+                    <ul>
+                      {securityResult.findings.map((finding) => (
+                        <li key={`${finding.category}-${finding.finding_type}`}>
+                          {finding.description}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           </article>
         </section>

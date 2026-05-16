@@ -5,10 +5,11 @@ from typing import Literal, TypedDict
 
 from langgraph.graph import END, StateGraph
 
-from app.api.schemas import ChatRequest, ChatResponse, Metrics, Source, TraceStep
+from app.api.schemas import ChatRequest, ChatResponse, Metrics, SecurityCheckRequest, Source, TraceStep
 from app.services.macro_service import compose_macro_answer, get_macro_series, infer_macro_series, is_macro_question
 from app.services.metadata_service import record_request_log
 from app.services.rag_service import build_retrieval_chat_response
+from app.services.security_service import build_security_block_answer, run_security_check
 from app.services.sql_analytics_service import analyze_financial_facts, infer_sql_request, is_sql_question
 
 
@@ -24,15 +25,43 @@ class OrchestratorState(TypedDict, total=False):
 
 
 def build_orchestrated_chat_response(request: ChatRequest) -> ChatResponse:
+    security_result = run_security_check(
+        SecurityCheckRequest(message=request.message, role="research_analyst"),
+        persist=True,
+    )
+    started_at = perf_counter()
+    security_trace = security_result.trace
+
+    if security_result.action == "block":
+        response = ChatResponse(
+            answer=build_security_block_answer(security_result),
+            agent="security-governance-agent",
+            sources=[],
+            trace=[
+                *security_trace,
+                TraceStep(step="respond", detail="Blocked request before agent routing."),
+            ],
+            metrics=Metrics(latency_ms=int((perf_counter() - started_at) * 1000)),
+        )
+        record_request_log("[BLOCKED_BY_SECURITY]", response.agent, 0, response.metrics.latency_ms)
+        return response
+
+    routed_request = request
+    if security_result.action == "mask":
+        routed_request = request.model_copy(update={"message": security_result.masked_message})
+
     graph = _build_graph()
     state: OrchestratorState = {
-        "request": request,
-        "trace": [TraceStep(step="receive", detail=f"Received {len(request.message)} characters.")],
-        "started_at": perf_counter(),
+        "request": routed_request,
+        "trace": [
+            *security_trace,
+            TraceStep(step="receive", detail=f"Received {len(routed_request.message)} characters."),
+        ],
+        "started_at": started_at,
     }
     final_state = graph.invoke(state)
     response = final_state["response"]
-    record_request_log(request.message, response.agent, len(response.sources), response.metrics.latency_ms)
+    record_request_log(routed_request.message, response.agent, len(response.sources), response.metrics.latency_ms)
     return response
 
 

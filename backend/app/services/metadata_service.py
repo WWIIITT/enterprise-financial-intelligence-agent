@@ -1,5 +1,5 @@
 from app.core.database import get_session_factory, initialize_database
-from app.models import DocumentChunkRecord, DocumentRecord, RequestLogRecord
+from app.models import DocumentChunkRecord, DocumentRecord, RequestLogRecord, SecurityAuditRecord
 from app.rag.store import StoredChunk
 
 
@@ -56,6 +56,40 @@ def record_request_log(
                     sources_count=sources_count,
                     latency_ms=latency_ms,
                     estimated_cost_usd=estimated_cost_usd,
+                )
+            )
+            session.commit()
+    except Exception:
+        return False
+
+    return True
+
+
+def record_security_audit(
+    message_hash: str,
+    role: str,
+    risk_level: str,
+    action: str,
+    finding_count: int,
+    agent: str = "security-governance-agent",
+) -> bool:
+    if not initialize_database():
+        return False
+
+    session_factory = get_session_factory()
+    if session_factory is None:
+        return False
+
+    try:
+        with session_factory() as session:
+            session.add(
+                SecurityAuditRecord(
+                    message_hash=message_hash,
+                    role=role,
+                    risk_level=risk_level,
+                    action=action,
+                    finding_count=finding_count,
+                    agent=agent,
                 )
             )
             session.commit()

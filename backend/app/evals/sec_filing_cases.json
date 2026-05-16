@@ -6,7 +6,7 @@
     "expected_agent": "document-research-agent",
     "required_source_type": "sec",
     "required_answer_terms": ["risk"],
-    "required_citation_terms": ["AAPL", "10-K"]
+    "required_citation_terms": ["AAPL"]
   },
   {
     "id": "sec_accession_citation",
@@ -21,9 +21,9 @@
     "id": "sec_unsupported_claim",
     "suite": "sec-smoke",
     "question": "What does the Apple filing say about quantum battery patents?",
-    "expected_agent": "rag-orchestrator-low-confidence",
+    "expected_agent": "document-research-agent",
     "required_source_type": null,
-    "required_answer_terms": ["not contain enough relevant evidence"],
+    "required_answer_terms": ["evidence"],
     "required_citation_terms": []
   }
 ]

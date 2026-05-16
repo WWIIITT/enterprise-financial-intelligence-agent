@@ -33,6 +33,30 @@ class ChatResponse(BaseModel):
     metrics: Metrics
 
 
+class SecurityCheckRequest(BaseModel):
+    message: str = Field(..., min_length=1)
+    role: str = Field(default="research_analyst", min_length=1)
+
+
+class SecurityFinding(BaseModel):
+    category: str
+    finding_type: str
+    severity: str
+    description: str
+    replacement: str | None = None
+
+
+class SecurityCheckResponse(BaseModel):
+    status: str
+    risk_level: str
+    action: str
+    masked_message: str
+    findings: list[SecurityFinding]
+    policy_tags: list[str]
+    recommended_handling: str
+    trace: list[TraceStep]
+
+
 class ConfigStatusResponse(BaseModel):
     service: str
     llm_provider_configured: bool

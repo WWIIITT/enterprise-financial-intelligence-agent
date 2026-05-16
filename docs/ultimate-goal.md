@@ -2,7 +2,7 @@
 
 ## 一句話定位
 
-`Enterprise Financial Intelligence Agent Platform` 是一個企業級 AI Agent 平台，結合 RAG、SQL Agent、金融文件分析、宏觀經濟資料、權限控制、LLMOps、監控、成本追蹤與治理文件，模擬金融公司內部的 research 與 operations automation platform
+`Enterprise Financial Intelligence Agent Platform` 是一個企業級 AI Agent 平台，結合 RAG、SQL Agent、金融文件分析、宏觀經濟資料、權限與治理、LLMOps、監控、成本追蹤和架構文件，模擬金融公司內部 research 與 operations automation platform
 
 這個 project 的定位不是一般 chatbot，而是展示一個可落地、可追蹤、可監控、可治理的 enterprise AI system
 
@@ -10,13 +10,13 @@
 
 這個 project 目標是同時展示 Senior AI Engineer 和 AI Solution Architect 能力
 
-- 用 LLM、RAG、structured data、workflow orchestration 建立實際可用的 AI application
+- 用 LLM、RAG、structured data、workflow orchestration 建立可用的 AI application
 - 整合 SEC、FRED、PostgreSQL、Qdrant、internal policy docs 等多種資料來源
 - 設計 evaluation、observability、cost tracking、risk control、governance
 - 用 architecture documents、roadmap、security design、cost estimate 展示 Solution Architect 思維
 - 在面試中清楚說明 business value、technical tradeoffs、production risk 和 rollout plan
 
-## 核心模組
+## Core Modules
 
 ## Document Research Agent
 
@@ -32,7 +32,7 @@
 
 ## Macro Analysis Agent
 
-使用 FRED economic data 生成宏觀分析摘要
+使用 FRED economic data 產生宏觀分析摘要
 
 支援資料:
 
@@ -73,14 +73,14 @@ Policy documents:
 
 目前能力:
 
-- 根據問題決定使用 Document Agent、Policy Agent、Macro Agent、SQL Agent、Macro + Document route，或 fallback route
+- 根據問題決定使用 Document Agent、Policy Agent、Macro Agent、SQL Agent、Macro + Document route 或 fallback route
 - 記錄 route decision
 - 回傳 multi-step trace，讓使用者知道系統用了哪些工具和資料
 - 保留原有 `/api/chat` response shape，frontend 不需要大改
 
 ## Evaluation Engine
 
-建立 evaluation datasets、scoring scripts 和 report generator，用來衡量
+建立 evaluation datasets、scoring scripts 和 report generator，用來衡量:
 
 - Retrieval accuracy
 - Answer faithfulness
@@ -91,6 +91,20 @@ Policy documents:
 - Router accuracy
 - Source coverage
 - Evaluation report quality
+
+## Security / Governance Guardrails
+
+在 agent routing 前執行 deterministic security preflight
+
+目前能力:
+
+- PII masking
+- Prompt injection detection
+- Policy risk classification
+- Block unsafe requests before retrieval or tool use
+- Mask sensitive values before agent routing
+- Security audit logs with message hash only
+- `security-smoke` evaluation suite
 
 ## Observability Dashboard
 
@@ -117,7 +131,7 @@ Solution Architect deliverables:
 - Demo script
 - Interview talking points
 
-## 推薦 Tech Stack
+## Recommended Tech Stack
 
 Backend:
 
@@ -170,7 +184,7 @@ Frontend:
 - TypeScript
 - Vite
 
-## 資料來源
+## Data Sources
 
 SEC EDGAR APIs:
 https://www.sec.gov/search-filings/edgar-application-programming-interfaces
@@ -196,14 +210,14 @@ Internal policy documents:
 - Model Risk Management Policy
 - Client Communication Policy
 
-## 系統架構
+## System Architecture
 
 ```text
 Frontend
   |
 FastAPI Gateway
   |
-Auth / RBAC / Request Logger
+Security Preflight / Request Logger
   |
 LangGraph Orchestrator
   |
@@ -211,6 +225,7 @@ LangGraph Orchestrator
   |-- SQL Analytics Agent -> PostgreSQL -> financial facts
   |-- Macro Agent -> FRED API / cached macro table
   |-- Policy Agent -> Vector DB -> internal policies
+  |-- Security Governance Agent -> guardrail checks / audit logs
   |-- Evaluator Agent -> eval dataset / scoring
   |
 Observability Layer
@@ -376,19 +391,22 @@ Completed:
 Status:
 
 ```text
-Planned
+Completed for MVP scope
 ```
 
-Planned:
+Completed:
 
-- PII masking
+- Sprint 7 SEC eval expectation cleanup
+- Deterministic security guardrail service
+- PII masking for email、phone、SSN、payment card-like values、secret-like tokens
 - Prompt injection detection
-- RBAC
-- Audit logs
-- Retry / timeout
-- Model fallback
-- Data retention policy
-- Human approval path
+- `/api/security/check`
+- `/api/chat` security preflight before LangGraph routing
+- Blocked request response through `security-governance-agent`
+- Masked request routing with redacted input
+- Security audit records with message hash only
+- Frontend System Status / Governance controls
+- `security-smoke` evaluation suite
 
 ## Sprint 9: Observability Dashboard
 
@@ -428,7 +446,7 @@ Planned:
 - Demo script
 - Interview talking points
 
-## 目前進度
+## Current Progress
 
 ```text
 Sprint 1: mostly completed
@@ -438,6 +456,7 @@ Sprint 4: completed for MVP scope
 Sprint 5: completed for MVP scope
 Sprint 6: completed for MVP scope
 Sprint 7: completed for MVP scope
+Sprint 8: completed for MVP scope
 ```
 
 目前系統能力:
@@ -454,19 +473,20 @@ Sprint 7: completed for MVP scope
 - SEC Company Facts sample/live ingestion
 - Deterministic Evaluation Engine
 - Markdown / JSON evaluation reports
-- Frontend demo for chat、ingestion、system status、SEC controls、macro controls、SQL controls
-- SEC、macro、orchestrator、SQL smoke evaluation suites
+- Security / Governance Guardrails
+- Frontend demo for chat、ingestion、system status、SEC controls、macro controls、SQL controls、governance controls
+- SEC、macro、orchestrator、SQL、security smoke evaluation suites
 
-## 下一個開發步驟
+## Next Development Step
 
 ```text
-Start Sprint 8: Security / Governance / Reliability
+Start Sprint 9: Observability Dashboard
 ```
 
 下一步工作:
 
-1. 加入 PII masking
-2. 加入 prompt injection detection
-3. 建立 RBAC placeholder
-4. 擴充 audit logs
-5. 定義 human approval path
+1. 建立 request metrics API
+2. 顯示 route distribution
+3. 顯示 latency p50 / p95
+4. 顯示 error rate
+5. 顯示 estimated cost per request
