@@ -266,6 +266,18 @@ Invoke-RestMethod -Method Post http://localhost:8000/api/ingest/sec `
   -Body '{"source":"sample-sec-inline","ticker":"AAPL","content":"Apple reports revenue risk from foreign exchange, interest rates, product demand, supply chain constraints, and macroeconomic uncertainty."}'
 ```
 
+### 7b. Optional API test: ingest live SEC EDGAR filing
+
+Live SEC ingestion requires `SEC_USER_AGENT` in `.env`.
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/ingest/sec `
+  -ContentType "application/json" `
+  -Body '{"source":"edgar","ticker":"AAPL","source_type":"10-K"}'
+```
+
+The live EDGAR path downloads the latest matching filing, stores the raw filing under `data/raw/sec/`, chunks the cleaned text, embeds the chunks, indexes them in Qdrant, and returns SEC citations with form type, filing date, accession number, and inferred section.
+
 ### 8. Optional API test: RAG chat from PowerShell
 
 ```powershell
@@ -388,6 +400,36 @@ Common Sprint 2 issues:
 - `Embedding provider request failed`: check `EMBEDDING_API_KEY`, `EMBEDDING_BASE_URL`, `EMBEDDING_MODEL`, and whether your provider supports embeddings.
 - `EMBEDDING_MODEL appears to be a reranking model`: choose a model tagged as text embedding, not rerank.
 - `Qdrant collection vector size is ...`: your existing Qdrant collection was created with another embedding dimension. Recreate the Docker volume or reset the collection, then ingest again.
+
+## Sprint 3 SEC EDGAR Runbook
+
+Sprint 3 adds live SEC filing ingestion through the existing `/api/ingest/sec` endpoint.
+
+1. Confirm `.env` has an identifiable SEC user agent:
+
+```env
+SEC_USER_AGENT=your-name your-email@example.com
+```
+
+2. Start Docker and backend.
+
+3. Ingest the latest 10-K for a ticker:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/ingest/sec `
+  -ContentType "application/json" `
+  -Body '{"source":"edgar","ticker":"AAPL","source_type":"10-K"}'
+```
+
+4. Ask a filing question:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/chat `
+  -ContentType "application/json" `
+  -Body '{"message":"What risks are mentioned for Apple?"}'
+```
+
+The response should route to `document-research-agent` and cite the SEC filing accession number.
 
 ## API
 

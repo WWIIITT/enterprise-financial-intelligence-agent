@@ -525,8 +525,8 @@ Sprint 3：ready to start
 
 ```text
 Phase 3：SEC EDGAR Live Ingestion
-Stage：Sprint 2 production-grade RAG core 已完成
-Current：準備從 SEC sample ingestion 升級到 live SEC EDGAR ingestion
+Stage：Sprint 3 started
+Current：已加入 SEC EDGAR connector 初版，下一步是 harden section parsing、filing selection、UI controls
 ```
 
 更精準地說：
@@ -534,7 +534,7 @@ Current：準備從 SEC sample ingestion 升級到 live SEC EDGAR ingestion
 ```text
 已完成 demo-grade RAG
 已完成 Sprint 2 production-grade retrieval core
-下一步是 Sprint 3 SEC EDGAR live ingestion
+已開始 Sprint 3 SEC EDGAR live ingestion
 ```
 
 ## Next Development Step

@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.rag.store import rag_store
+from app.services.sec_edgar_client import SecFilingDocument
 
 
 client = TestClient(app)
@@ -59,6 +60,45 @@ def test_sec_ingestion_accepts_inline_content() -> None:
 
     assert chat_response.status_code == 200
     assert chat_body["sources"][0]["source_type"] == "sec"
+
+
+def test_sec_ingestion_accepts_mocked_live_edgar(monkeypatch) -> None:
+    rag_store.delete_by_source_type("sec")
+
+    def fake_fetch_latest_filing(ticker: str | None, cik: str | None, form_type: str) -> SecFilingDocument:
+        assert ticker == "AAPL"
+        assert cik is None
+        assert form_type == "10-K"
+        return SecFilingDocument(
+            ticker="AAPL",
+            cik="0000320193",
+            company_name="Apple Inc.",
+            form_type="10-K",
+            accession_number="0000320193-24-000123",
+            filing_date="2024-11-01",
+            primary_document="aapl-20240928.htm",
+            document_url="https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/aapl-20240928.htm",
+            text="Item 1A. Risk Factors Apple reports revenue risk, supply chain risk, and macroeconomic uncertainty.",
+            raw_path="data/raw/sec/AAPL_10-K_0000320193-24-000123_aapl-20240928.htm",
+        )
+
+    monkeypatch.setattr("app.services.ingestion_service.fetch_latest_filing", fake_fetch_latest_filing)
+
+    response = client.post("/api/ingest/sec", json={"source": "edgar", "ticker": "AAPL", "source_type": "10-K"})
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["status"] == "completed"
+    assert body["source_type"] == "sec"
+    assert body["documents_indexed"] == 1
+    assert body["chunks_indexed"] >= 1
+    assert "Live SEC EDGAR filing indexed" in body["message"]
+
+    chat_response = client.post("/api/chat", json={"message": "What risks are mentioned for Apple?"})
+    chat_body = chat_response.json()
+
+    assert chat_response.status_code == 200
+    assert chat_body["sources"][0]["citation"].startswith("AAPL 10-K 2024-11-01 0000320193-24-000123")
 
 
 def test_low_confidence_question_returns_no_answer() -> None:

@@ -12,7 +12,7 @@ Current completion:
 ```text
 Sprint 1: 80-90% completed
 Sprint 2: core completed for MVP scope
-Sprint 3: ready to start
+Sprint 3: started
 ```
 
 ## Sprint 1: Project Skeleton + RAG MVP Foundation
@@ -93,12 +93,20 @@ Implement SEC EDGAR live filing ingestion
 ```
 
 - SEC EDGAR connector.
-- Ticker / CIK lookup.
-- 10-K / 10-Q ingestion.
-- Raw filing storage under `data/raw/`.
-- Filing parser and text cleaner.
+- Ticker / CIK lookup. Initial implementation done.
+- Company submissions metadata lookup. Initial implementation done.
+- 10-K / 10-Q ingestion. Initial latest-filing implementation done.
+- Raw filing storage under `data/raw/sec/`. Done.
+- Filing parser and text cleaner. Initial HTML/text cleaner done.
 - Chunk + embed + index.
-- SEC citations in answers with accession number, form type, filing date, and section.
+- SEC citations in answers with accession number, form type, filing date, and section. Initial implementation done.
+
+Next hardening:
+
+- Improve SEC section parsing beyond simple keyword inference.
+- Add filing selection by year or accession number.
+- Add UI controls for live SEC ingestion.
+- Add request throttling / retry behavior for SEC access.
 
 ## Sprint 4: Macro Analysis Agent
 

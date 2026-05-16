@@ -7,9 +7,11 @@ from app.rag.embedding_client import EmbeddingConfigurationError, EmbeddingProvi
 from app.rag.store import StoredChunk, rag_store, stable_chunk_id
 from app.rag.vector_store import QdrantVectorStoreError, qdrant_vector_store
 from app.services.metadata_service import record_ingested_chunks
+from app.services.sec_edgar_client import SecEdgarError, SecFilingDocument, fetch_latest_filing
 
 
 POLICY_DIR = ROOT_DIR / "data" / "policies"
+LIVE_SEC_SOURCES = {"edgar", "live", "sec-edgar", "sec_edgar"}
 
 
 def ingest_policy_documents(request: IngestRequest) -> IngestResponse:
@@ -49,9 +51,71 @@ def ingest_policy_documents(request: IngestRequest) -> IngestResponse:
 
 
 def ingest_sec_document(request: IngestRequest) -> IngestResponse:
-    text = _load_sec_text(request)
-    title = request.ticker or request.cik or request.source
-    stored_chunks = [
+    if _is_live_sec_request(request):
+        filing = _fetch_live_sec_filing(request)
+        stored_chunks = _build_live_sec_chunks(filing)
+        title = f"SEC Filing: {filing.ticker} {filing.form_type} {filing.filing_date}"
+        source = filing.document_url
+        message_suffix = (
+            f" Live SEC EDGAR filing indexed: {filing.ticker} {filing.form_type} "
+            f"{filing.filing_date} {filing.accession_number}."
+        )
+    else:
+        text = _load_sec_text(request)
+        title = request.ticker or request.cik or request.source
+        source = request.source
+        stored_chunks = _build_sample_sec_chunks(request, text, title)
+        message_suffix = ""
+
+    rag_store.delete_by_source_type("sec")
+    qdrant_vector_store.delete_by_source_type("sec")
+    indexed = rag_store.upsert(stored_chunks)
+    qdrant_enabled = _upsert_qdrant(stored_chunks)
+    record_ingested_chunks("sec", source, f"SEC Filing: {title}", stored_chunks)
+    return IngestResponse(
+        status="completed",
+        source_type="sec",
+        source=source,
+        documents_indexed=1 if stored_chunks else 0,
+        chunks_indexed=indexed,
+        vector_backend="qdrant-provider-embeddings" if qdrant_enabled else "in-memory-dev-store",
+        message=f"{_ingestion_message(qdrant_enabled)}{message_suffix}",
+    )
+
+
+def _is_live_sec_request(request: IngestRequest) -> bool:
+    return request.source.lower() in LIVE_SEC_SOURCES
+
+
+def _fetch_live_sec_filing(request: IngestRequest) -> SecFilingDocument:
+    try:
+        form_type = request.source_type or "10-K"
+        return fetch_latest_filing(ticker=request.ticker, cik=request.cik, form_type=form_type)
+    except SecEdgarError as exc:
+        raise RuntimeError(str(exc)) from exc
+
+
+def _build_live_sec_chunks(filing: SecFilingDocument) -> list[StoredChunk]:
+    chunks: list[StoredChunk] = []
+    for chunk in chunk_text(filing.text):
+        section = _infer_sec_section(chunk.text)
+        citation = f"{filing.citation_prefix} {section} chunk {chunk.chunk_index + 1}"
+        chunks.append(
+            StoredChunk(
+                id=stable_chunk_id("sec", filing.document_url, chunk.chunk_index, chunk.text),
+                title=f"SEC Filing: {filing.ticker} {filing.form_type} {filing.filing_date}",
+                text=chunk.text,
+                source_type="sec",
+                source=filing.document_url,
+                citation=citation,
+                url=filing.document_url,
+            )
+        )
+    return chunks
+
+
+def _build_sample_sec_chunks(request: IngestRequest, text: str, title: str) -> list[StoredChunk]:
+    return [
         StoredChunk(
             id=stable_chunk_id("sec", request.source, chunk.chunk_index, chunk.text),
             title=f"SEC Filing: {title}",
@@ -64,20 +128,16 @@ def ingest_sec_document(request: IngestRequest) -> IngestResponse:
         for chunk in chunk_text(text)
     ]
 
-    rag_store.delete_by_source_type("sec")
-    qdrant_vector_store.delete_by_source_type("sec")
-    indexed = rag_store.upsert(stored_chunks)
-    qdrant_enabled = _upsert_qdrant(stored_chunks)
-    record_ingested_chunks("sec", request.source, f"SEC Filing: {title}", stored_chunks)
-    return IngestResponse(
-        status="completed",
-        source_type="sec",
-        source=request.source,
-        documents_indexed=1 if text else 0,
-        chunks_indexed=indexed,
-        vector_backend="qdrant-provider-embeddings" if qdrant_enabled else "in-memory-dev-store",
-        message=_ingestion_message(qdrant_enabled),
-    )
+
+def _infer_sec_section(text: str) -> str:
+    lowered = text.lower()
+    if "risk factor" in lowered:
+        return "Risk Factors"
+    if "management" in lowered and "discussion" in lowered:
+        return "MD&A"
+    if "business" in lowered:
+        return "Business"
+    return "Filing"
 
 
 def _upsert_qdrant(chunks: list[StoredChunk]) -> bool:

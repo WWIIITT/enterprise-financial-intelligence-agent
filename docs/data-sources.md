@@ -17,6 +17,8 @@ Implementation notes:
 - Raw files should be stored under `data/raw/`.
 - Processed files should be stored under `data/processed/`.
 - SEC ingestion should support a local sample fallback for demos.
+- Sprint 3 live ingestion uses SEC ticker mapping, company submissions metadata, and filing archive documents.
+- Live filing citations should include ticker, form type, filing date, accession number, inferred section, and chunk number.
 
 ## FRED API
 
