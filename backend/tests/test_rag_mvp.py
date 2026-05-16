@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.rag.store import rag_store
+from app.services.ingestion_service import _build_live_sec_chunks
 from app.services.sec_edgar_client import SecFilingDocument
 
 
@@ -65,10 +66,18 @@ def test_sec_ingestion_accepts_inline_content() -> None:
 def test_sec_ingestion_accepts_mocked_live_edgar(monkeypatch) -> None:
     rag_store.delete_by_source_type("sec")
 
-    def fake_fetch_latest_filing(ticker: str | None, cik: str | None, form_type: str) -> SecFilingDocument:
+    def fake_fetch_latest_filing(
+        ticker: str | None,
+        cik: str | None,
+        form_type: str,
+        filing_year: int | None,
+        accession_number: str | None,
+    ) -> SecFilingDocument:
         assert ticker == "AAPL"
         assert cik is None
         assert form_type == "10-K"
+        assert filing_year is None
+        assert accession_number is None
         return SecFilingDocument(
             ticker="AAPL",
             cik="0000320193",
@@ -99,6 +108,73 @@ def test_sec_ingestion_accepts_mocked_live_edgar(monkeypatch) -> None:
 
     assert chat_response.status_code == 200
     assert chat_body["sources"][0]["citation"].startswith("AAPL 10-K 2024-11-01 0000320193-24-000123")
+
+
+def test_sec_ingestion_prefers_new_form_type_fields(monkeypatch) -> None:
+    def fake_fetch_latest_filing(
+        ticker: str | None,
+        cik: str | None,
+        form_type: str,
+        filing_year: int | None,
+        accession_number: str | None,
+    ) -> SecFilingDocument:
+        assert ticker == "AAPL"
+        assert form_type == "10-Q"
+        assert filing_year == 2025
+        assert accession_number == "0000320193-25-000050"
+        return SecFilingDocument(
+            ticker="AAPL",
+            cik="0000320193",
+            company_name="Apple Inc.",
+            form_type="10-Q",
+            accession_number="0000320193-25-000050",
+            filing_date="2025-05-01",
+            primary_document="aapl-20250329.htm",
+            document_url="https://www.sec.gov/Archives/edgar/data/320193/000032019325000050/aapl-20250329.htm",
+            text="Item 1A. Risk Factors Apple faces quarterly supply risk and demand risk.",
+            raw_path="data/raw/sec/AAPL_10-Q_0000320193-25-000050_aapl-20250329.htm",
+        )
+
+    monkeypatch.setattr("app.services.ingestion_service.fetch_latest_filing", fake_fetch_latest_filing)
+
+    response = client.post(
+        "/api/ingest/sec",
+        json={
+            "source": "edgar",
+            "ticker": "AAPL",
+            "source_type": "10-K",
+            "form_type": "10-Q",
+            "filing_year": 2025,
+            "accession_number": "0000320193-25-000050",
+        },
+    )
+    body = response.json()
+
+    assert response.status_code == 200
+    assert "AAPL 10-Q 2025-05-01 0000320193-25-000050" in body["message"]
+
+
+def test_live_sec_chunk_citations_carry_forward_section() -> None:
+    filing = SecFilingDocument(
+        ticker="AAPL",
+        cik="0000320193",
+        company_name="Apple Inc.",
+        form_type="10-K",
+        accession_number="0000320193-24-000123",
+        filing_date="2024-11-01",
+        primary_document="aapl-20240928.htm",
+        document_url="https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/aapl-20240928.htm",
+        text=(
+            "Item 1A. Risk Factors. Apple faces cybersecurity risk and supply chain risk. "
+            "Additional risk disclosure continues for a long paragraph. " * 20
+        ),
+        raw_path="data/raw/sec/AAPL_10-K_0000320193-24-000123_aapl-20240928.htm",
+    )
+
+    chunks = _build_live_sec_chunks(filing)
+
+    assert chunks
+    assert all("Risk Factors" in chunk.citation for chunk in chunks[:2])
 
 
 def test_low_confidence_question_returns_no_answer() -> None:

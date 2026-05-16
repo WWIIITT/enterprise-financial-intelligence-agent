@@ -1,0 +1,29 @@
+[
+  {
+    "id": "sec_aapl_risk_factors",
+    "suite": "sec-smoke",
+    "question": "What risks are mentioned for Apple?",
+    "expected_agent": "document-research-agent",
+    "required_source_type": "sec",
+    "required_answer_terms": ["risk"],
+    "required_citation_terms": ["AAPL", "10-K"]
+  },
+  {
+    "id": "sec_accession_citation",
+    "suite": "sec-smoke",
+    "question": "Cite the Apple filing sources used for risk disclosures.",
+    "expected_agent": "document-research-agent",
+    "required_source_type": "sec",
+    "required_answer_terms": ["Sources"],
+    "required_citation_terms": ["0000320193"]
+  },
+  {
+    "id": "sec_unsupported_claim",
+    "suite": "sec-smoke",
+    "question": "What does the Apple filing say about quantum battery patents?",
+    "expected_agent": "rag-orchestrator-low-confidence",
+    "required_source_type": null,
+    "required_answer_terms": ["not contain enough relevant evidence"],
+    "required_citation_terms": []
+  }
+]

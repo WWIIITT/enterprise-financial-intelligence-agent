@@ -478,7 +478,7 @@ Solution Architect deliverables
 ```text
 Sprint 1：80-90% completed
 Sprint 2：core completed for MVP scope
-Sprint 3：ready to start
+Sprint 3：completed for MVP scope
 ```
 
 已完成：
@@ -525,8 +525,8 @@ Sprint 3：ready to start
 
 ```text
 Phase 3：SEC EDGAR Live Ingestion
-Stage：Sprint 3 started
-Current：已加入 SEC EDGAR connector 初版，下一步是 harden section parsing、filing selection、UI controls
+Stage：completed for MVP scope
+Current：SEC EDGAR live ingestion、filing selection、section parser、UI controls、retry/throttling、SEC eval smoke cases 已完成
 ```
 
 更精準地說：
@@ -534,7 +534,8 @@ Current：已加入 SEC EDGAR connector 初版，下一步是 harden section par
 ```text
 已完成 demo-grade RAG
 已完成 Sprint 2 production-grade retrieval core
-已開始 Sprint 3 SEC EDGAR live ingestion
+已完成 Sprint 3 SEC EDGAR live ingestion MVP
+下一步是 Sprint 4 Macro Analysis Agent
 ```
 
 ## Next Development Step
@@ -542,19 +543,15 @@ Current：已加入 SEC EDGAR connector 初版，下一步是 harden section par
 下一個最值得做的 task：
 
 ```text
-Implement SEC EDGAR live filing ingestion
+Start Sprint 4 Macro Analysis Agent
 ```
 
 具體工作：
 
-1. 建立 SEC EDGAR connector。
-2. 加入 ticker -> CIK lookup。
-3. 讀取 company submissions metadata。
-4. 支援 10-K / 10-Q filing selection。
-5. 下載 filing text 或 HTML 到 `data/raw/`。
-6. Parse filing sections，先聚焦 business、risk factors、MD&A。
-7. Chunk + embed + index into Qdrant。
-8. Citation 顯示 accession number、form type、filing date、section。
-9. 更新 `/api/ingest/sec`，讓它支援 live EDGAR source，同時保留 sample fallback。
+1. 建立 FRED API connector。
+2. 支援 CPI、GDP、unemployment、interest rate series。
+3. Cache macro observations。
+4. 建立 macro summary endpoint。
+5. 讓 company risk question 可以結合 SEC filing + macro context。
 
-這一步做完，project 會從「sample RAG」升級成「real financial document RAG」。
+這一步做完，project 會從「real financial document RAG」升級成「company + macro analysis system」。

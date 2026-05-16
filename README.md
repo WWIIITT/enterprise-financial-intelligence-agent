@@ -273,7 +273,7 @@ Live SEC ingestion requires `SEC_USER_AGENT` in `.env`.
 ```powershell
 Invoke-RestMethod -Method Post http://localhost:8000/api/ingest/sec `
   -ContentType "application/json" `
-  -Body '{"source":"edgar","ticker":"AAPL","source_type":"10-K"}'
+  -Body '{"source":"edgar","ticker":"AAPL","form_type":"10-K","filing_year":2025}'
 ```
 
 The live EDGAR path downloads the latest matching filing, stores the raw filing under `data/raw/sec/`, chunks the cleaned text, embeds the chunks, indexes them in Qdrant, and returns SEC citations with form type, filing date, accession number, and inferred section.
@@ -418,10 +418,26 @@ SEC_USER_AGENT=your-name your-email@example.com
 ```powershell
 Invoke-RestMethod -Method Post http://localhost:8000/api/ingest/sec `
   -ContentType "application/json" `
-  -Body '{"source":"edgar","ticker":"AAPL","source_type":"10-K"}'
+  -Body '{"source":"edgar","ticker":"AAPL","form_type":"10-K"}'
 ```
 
-4. Ask a filing question:
+4. Ingest a filing by year:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/ingest/sec `
+  -ContentType "application/json" `
+  -Body '{"source":"edgar","ticker":"AAPL","form_type":"10-K","filing_year":2025}'
+```
+
+5. Ingest a filing by accession number:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/ingest/sec `
+  -ContentType "application/json" `
+  -Body '{"source":"edgar","ticker":"AAPL","accession_number":"0000320193-25-000079"}'
+```
+
+6. Ask a filing question:
 
 ```powershell
 Invoke-RestMethod -Method Post http://localhost:8000/api/chat `
@@ -429,7 +445,17 @@ Invoke-RestMethod -Method Post http://localhost:8000/api/chat `
   -Body '{"message":"What risks are mentioned for Apple?"}'
 ```
 
-The response should route to `document-research-agent` and cite the SEC filing accession number.
+The response should route to `document-research-agent`, include a `Key Risks` section, and cite the SEC filing accession number.
+
+7. Run SEC evaluation smoke cases:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/evals/run `
+  -ContentType "application/json" `
+  -Body '{"suite":"sec-smoke"}'
+```
+
+The browser UI also includes live SEC controls for ticker, form type, filing year, and accession number in the Data Sources panel.
 
 ## API
 

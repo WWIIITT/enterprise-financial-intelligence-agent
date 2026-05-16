@@ -7,7 +7,7 @@ from app.rag.embedding_client import EmbeddingConfigurationError, EmbeddingProvi
 from app.rag.store import StoredChunk, rag_store, stable_chunk_id
 from app.rag.vector_store import QdrantVectorStoreError, qdrant_vector_store
 from app.services.metadata_service import record_ingested_chunks
-from app.services.sec_edgar_client import SecEdgarError, SecFilingDocument, fetch_latest_filing
+from app.services.sec_edgar_client import SecEdgarError, SecFilingDocument, fetch_latest_filing, parse_filing_sections
 
 
 POLICY_DIR = ROOT_DIR / "data" / "policies"
@@ -89,28 +89,36 @@ def _is_live_sec_request(request: IngestRequest) -> bool:
 
 def _fetch_live_sec_filing(request: IngestRequest) -> SecFilingDocument:
     try:
-        form_type = request.source_type or "10-K"
-        return fetch_latest_filing(ticker=request.ticker, cik=request.cik, form_type=form_type)
+        form_type = request.form_type or request.source_type or "10-K"
+        return fetch_latest_filing(
+            ticker=request.ticker,
+            cik=request.cik,
+            form_type=form_type,
+            filing_year=request.filing_year,
+            accession_number=request.accession_number,
+        )
     except SecEdgarError as exc:
         raise RuntimeError(str(exc)) from exc
 
 
 def _build_live_sec_chunks(filing: SecFilingDocument) -> list[StoredChunk]:
     chunks: list[StoredChunk] = []
-    for chunk in chunk_text(filing.text):
-        section = _infer_sec_section(chunk.text)
-        citation = f"{filing.citation_prefix} {section} chunk {chunk.chunk_index + 1}"
-        chunks.append(
-            StoredChunk(
-                id=stable_chunk_id("sec", filing.document_url, chunk.chunk_index, chunk.text),
-                title=f"SEC Filing: {filing.ticker} {filing.form_type} {filing.filing_date}",
-                text=chunk.text,
-                source_type="sec",
-                source=filing.document_url,
-                citation=citation,
-                url=filing.document_url,
+    chunk_index = 0
+    for section in parse_filing_sections(filing.text):
+        for chunk in chunk_text(section.text):
+            citation = f"{filing.citation_prefix} {section.name} chunk {chunk_index + 1}"
+            chunks.append(
+                StoredChunk(
+                    id=stable_chunk_id("sec", filing.document_url, chunk_index, chunk.text),
+                    title=f"SEC Filing: {filing.ticker} {filing.form_type} {filing.filing_date}",
+                    text=chunk.text,
+                    source_type="sec",
+                    source=filing.document_url,
+                    citation=citation,
+                    url=filing.document_url,
+                )
             )
-        )
+            chunk_index += 1
     return chunks
 
 
@@ -127,17 +135,6 @@ def _build_sample_sec_chunks(request: IngestRequest, text: str, title: str) -> l
         )
         for chunk in chunk_text(text)
     ]
-
-
-def _infer_sec_section(text: str) -> str:
-    lowered = text.lower()
-    if "risk factor" in lowered:
-        return "Risk Factors"
-    if "management" in lowered and "discussion" in lowered:
-        return "MD&A"
-    if "business" in lowered:
-        return "Business"
-    return "Filing"
 
 
 def _upsert_qdrant(chunks: list[StoredChunk]) -> bool:

@@ -12,7 +12,7 @@ Current completion:
 ```text
 Sprint 1: 80-90% completed
 Sprint 2: core completed for MVP scope
-Sprint 3: started
+Sprint 3: completed for MVP scope
 ```
 
 ## Sprint 1: Project Skeleton + RAG MVP Foundation
@@ -97,16 +97,25 @@ Implement SEC EDGAR live filing ingestion
 - Company submissions metadata lookup. Initial implementation done.
 - 10-K / 10-Q ingestion. Initial latest-filing implementation done.
 - Raw filing storage under `data/raw/sec/`. Done.
-- Filing parser and text cleaner. Initial HTML/text cleaner done.
-- Chunk + embed + index.
+- Filing parser and text cleaner. Initial HTML/text cleaner plus common mojibake repair done.
+- Chunk + embed + index. Done for live AAPL 10-K validation.
 - SEC citations in answers with accession number, form type, filing date, and section. Initial implementation done.
+- Risk questions prioritize Risk Factors evidence. Initial implementation done.
 
-Next hardening:
+Completed hardening:
 
-- Improve SEC section parsing beyond simple keyword inference.
-- Add filing selection by year or accession number.
-- Add UI controls for live SEC ingestion.
-- Add request throttling / retry behavior for SEC access.
+- SEC section parser with item boundary detection.
+- Filing selection by year or accession number.
+- UI controls for live SEC ingestion.
+- Request throttling / retry behavior for SEC access.
+- Deterministic SEC risk answer synthesis.
+- SEC filing evaluation smoke cases.
+
+Next task:
+
+```text
+Start Sprint 4: Macro Analysis Agent
+```
 
 ## Sprint 4: Macro Analysis Agent
 

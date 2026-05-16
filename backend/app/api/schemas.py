@@ -49,6 +49,9 @@ class IngestRequest(BaseModel):
     source_type: str | None = None
     ticker: str | None = None
     cik: str | None = None
+    form_type: str | None = None
+    filing_year: int | None = Field(default=None, ge=1994, le=2100)
+    accession_number: str | None = None
     limit: int = Field(default=5, ge=1, le=50)
     content: str | None = None
 

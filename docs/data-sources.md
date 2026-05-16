@@ -19,6 +19,8 @@ Implementation notes:
 - SEC ingestion should support a local sample fallback for demos.
 - Sprint 3 live ingestion uses SEC ticker mapping, company submissions metadata, and filing archive documents.
 - Live filing citations should include ticker, form type, filing date, accession number, inferred section, and chunk number.
+- Filing selection supports accession number, filing year plus form type, or latest form type.
+- SEC requests use bounded retry and a small delay to reduce transient failure and rate-limit risk.
 
 ## FRED API
 

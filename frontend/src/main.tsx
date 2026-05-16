@@ -65,6 +65,10 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [ingesting, setIngesting] = useState<"policy" | "sec" | null>(null);
   const [isConfigLoading, setIsConfigLoading] = useState(false);
+  const [secTicker, setSecTicker] = useState("AAPL");
+  const [secFormType, setSecFormType] = useState("10-K");
+  const [secFilingYear, setSecFilingYear] = useState("");
+  const [secAccessionNumber, setSecAccessionNumber] = useState("");
 
   useEffect(() => {
     void loadConfigStatus();
@@ -114,6 +118,23 @@ function App() {
         "Apple reports revenue risk from foreign exchange, interest rates, product demand, supply chain constraints, and macroeconomic uncertainty."
     });
     setQuestion("What risks are mentioned for Apple?");
+  }
+
+  async function ingestLiveSecFiling() {
+    const payload: Record<string, string | number> = {
+      source: "edgar",
+      ticker: secTicker.trim() || "AAPL",
+      form_type: secFormType
+    };
+    const year = Number(secFilingYear);
+    if (secFilingYear.trim() && Number.isInteger(year)) {
+      payload.filing_year = year;
+    }
+    if (secAccessionNumber.trim()) {
+      payload.accession_number = secAccessionNumber.trim();
+    }
+    await runIngestion("sec", "/api/ingest/sec", payload);
+    setQuestion(`What risks are mentioned for ${payload.ticker}?`);
   }
 
   async function runIngestion(kind: "policy" | "sec", endpoint: string, payload: object) {
@@ -255,6 +276,40 @@ function App() {
               <button className="secondary-button" type="button" onClick={ingestSecSample} disabled={ingesting !== null}>
                 {ingesting === "sec" ? <Loader2 className="spin" size={18} /> : <PlayCircle size={18} />}
                 Ingest SEC Sample
+              </button>
+            </div>
+            <div className="sec-ingest-controls">
+              <label>
+                <span>Ticker</span>
+                <input value={secTicker} onChange={(event) => setSecTicker(event.target.value.toUpperCase())} />
+              </label>
+              <label>
+                <span>Form</span>
+                <select value={secFormType} onChange={(event) => setSecFormType(event.target.value)}>
+                  <option value="10-K">10-K</option>
+                  <option value="10-Q">10-Q</option>
+                </select>
+              </label>
+              <label>
+                <span>Year</span>
+                <input
+                  inputMode="numeric"
+                  placeholder="optional"
+                  value={secFilingYear}
+                  onChange={(event) => setSecFilingYear(event.target.value)}
+                />
+              </label>
+              <label className="wide-field">
+                <span>Accession</span>
+                <input
+                  placeholder="optional"
+                  value={secAccessionNumber}
+                  onChange={(event) => setSecAccessionNumber(event.target.value)}
+                />
+              </label>
+              <button className="secondary-button wide-field" type="button" onClick={ingestLiveSecFiling} disabled={ingesting !== null}>
+                {ingesting === "sec" ? <Loader2 className="spin" size={18} /> : <PlayCircle size={18} />}
+                Ingest Live SEC Filing
               </button>
             </div>
             {ingestResults.length ? (

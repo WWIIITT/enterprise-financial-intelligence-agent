@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import html
 import re
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -14,6 +15,9 @@ SEC_TICKER_URL = "https://www.sec.gov/files/company_tickers.json"
 SEC_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
 SEC_ARCHIVES_URL = "https://www.sec.gov/Archives/edgar/data/{cik}/{accession}/{document}"
 RAW_SEC_DIR = ROOT_DIR / "data" / "raw" / "sec"
+RETRY_STATUS_CODES = {429, 500, 502, 503, 504}
+MAX_SEC_RETRIES = 3
+SEC_REQUEST_DELAY_SECONDS = 0.12
 
 
 class SecEdgarError(RuntimeError):
@@ -38,12 +42,29 @@ class SecFilingDocument:
         return f"{self.ticker} {self.form_type} {self.filing_date} {self.accession_number}"
 
 
-def fetch_latest_filing(ticker: str | None, cik: str | None, form_type: str = "10-K") -> SecFilingDocument:
+@dataclass(frozen=True)
+class SecSection:
+    name: str
+    text: str
+
+
+def fetch_latest_filing(
+    ticker: str | None,
+    cik: str | None,
+    form_type: str = "10-K",
+    filing_year: int | None = None,
+    accession_number: str | None = None,
+) -> SecFilingDocument:
     normalized_form = form_type.upper()
     resolved_cik, resolved_ticker, company_name = _resolve_company(ticker, cik)
     submissions = _get_json(SEC_SUBMISSIONS_URL.format(cik=resolved_cik))
     recent = submissions.get("filings", {}).get("recent", {})
-    filing = _select_recent_filing(recent, normalized_form)
+    filing = _select_recent_filing(
+        recent,
+        form_type=normalized_form,
+        filing_year=filing_year,
+        accession_number=accession_number,
+    )
     accession_number = filing["accessionNumber"]
     primary_document = filing["primaryDocument"]
     archive_cik = str(int(resolved_cik))
@@ -83,8 +104,57 @@ def clean_filing_text(raw_content: str) -> str:
     without_scripts = re.sub(r"(?is)<(script|style).*?>.*?</\1>", " ", raw_content)
     without_tags = re.sub(r"(?s)<[^>]+>", " ", without_scripts)
     decoded = html.unescape(without_tags)
+    decoded = fix_common_mojibake(decoded)
     decoded = re.sub(r"\s+", " ", decoded)
     return decoded.strip()
+
+
+def parse_filing_sections(text: str) -> list[SecSection]:
+    normalized = re.sub(r"\s+", " ", text).strip()
+    if not normalized:
+        return []
+
+    heading_pattern = re.compile(
+        r"\bitem\s+"
+        r"(1a|1b|1|7a|7|8)\s*[\.\-:]*\s*"
+        r"(risk\s+factors?|unresolved\s+staff\s+comments|business|"
+        r"management'?s\s+discussion\s+and\s+analysis|"
+        r"quantitative\s+and\s+qualitative\s+disclosures\s+about\s+market\s+risk|"
+        r"financial\s+statements)",
+        re.IGNORECASE,
+    )
+    matches = list(heading_pattern.finditer(normalized))
+    if not matches:
+        return [SecSection(name="Filing", text=normalized)]
+
+    sections: list[SecSection] = []
+    if matches[0].start() > 0:
+        sections.append(SecSection(name="Filing", text=normalized[: matches[0].start()].strip()))
+
+    for index, match in enumerate(matches):
+        start = match.start()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(normalized)
+        section_text = normalized[start:end].strip()
+        if section_text:
+            sections.append(SecSection(name=_section_name(match.group(1)), text=section_text))
+    return sections
+
+
+def fix_common_mojibake(text: str) -> str:
+    replacements = {
+        "â€™": "'",
+        "â€˜": "'",
+        "â€œ": '"',
+        "â€": '"',
+        "â€“": "-",
+        "â€”": "-",
+        "Â ": " ",
+        "Â": "",
+    }
+    fixed = text
+    for broken, replacement in replacements.items():
+        fixed = fixed.replace(broken, replacement)
+    return fixed
 
 
 def _resolve_company(ticker: str | None, cik: str | None) -> tuple[str, str, str]:
@@ -102,17 +172,21 @@ def _resolve_company(ticker: str | None, cik: str | None) -> tuple[str, str, str
     raise SecEdgarError(f"Ticker was not found in SEC ticker mapping: {ticker}")
 
 
-def _select_recent_filing(recent: dict[str, list], form_type: str) -> dict[str, str]:
+def _select_recent_filing(
+    recent: dict[str, list],
+    form_type: str,
+    filing_year: int | None = None,
+    accession_number: str | None = None,
+) -> dict[str, str]:
     forms = recent.get("form", [])
     accession_numbers = recent.get("accessionNumber", [])
     filing_dates = recent.get("filingDate", [])
     primary_documents = recent.get("primaryDocument", [])
+    normalized_accession = accession_number.strip() if accession_number else None
 
     for index, form in enumerate(forms):
-        if str(form).upper() != form_type:
-            continue
         try:
-            return {
+            candidate = {
                 "form": str(forms[index]),
                 "accessionNumber": str(accession_numbers[index]),
                 "filingDate": str(filing_dates[index]),
@@ -120,6 +194,29 @@ def _select_recent_filing(recent: dict[str, list], form_type: str) -> dict[str, 
             }
         except IndexError as exc:
             raise SecEdgarError("SEC submissions response has inconsistent filing metadata arrays.") from exc
+        if normalized_accession and candidate["accessionNumber"] == normalized_accession:
+            return candidate
+
+    if normalized_accession:
+        raise SecEdgarError(f"No filing found for accession number {normalized_accession}.")
+
+    for index, form in enumerate(forms):
+        if str(form).upper() != form_type:
+            continue
+        try:
+            candidate = {
+                "form": str(forms[index]),
+                "accessionNumber": str(accession_numbers[index]),
+                "filingDate": str(filing_dates[index]),
+                "primaryDocument": str(primary_documents[index]),
+            }
+        except IndexError as exc:
+            raise SecEdgarError("SEC submissions response has inconsistent filing metadata arrays.") from exc
+        if filing_year is None or candidate["filingDate"].startswith(str(filing_year)):
+            return candidate
+
+    if filing_year is not None:
+        raise SecEdgarError(f"No recent {form_type} filing found for year {filing_year}.")
 
     raise SecEdgarError(f"No recent {form_type} filing found in SEC submissions response.")
 
@@ -133,15 +230,13 @@ def _normalize_cik(cik: str) -> str:
 
 def _get_json(url: str) -> dict:
     with _client() as client:
-        response = client.get(url)
-        response.raise_for_status()
+        response = _request_with_retry(client, url)
         return response.json()
 
 
 def _get_text(url: str) -> str:
     with _client() as client:
-        response = client.get(url)
-        response.raise_for_status()
+        response = _request_with_retry(client, url)
         return response.text
 
 
@@ -172,3 +267,40 @@ def _write_raw_filing(
     path = RAW_SEC_DIR / filename
     path.write_text(raw_content, encoding="utf-8")
     return path
+
+
+def _request_with_retry(client: httpx.Client, url: str) -> httpx.Response:
+    last_error: Exception | None = None
+    for attempt in range(1, MAX_SEC_RETRIES + 1):
+        time.sleep(SEC_REQUEST_DELAY_SECONDS)
+        try:
+            response = client.get(url)
+            if response.status_code in RETRY_STATUS_CODES and attempt < MAX_SEC_RETRIES:
+                time.sleep(SEC_REQUEST_DELAY_SECONDS * attempt)
+                continue
+            response.raise_for_status()
+            return response
+        except httpx.HTTPError as exc:
+            last_error = exc
+            if attempt < MAX_SEC_RETRIES:
+                time.sleep(SEC_REQUEST_DELAY_SECONDS * attempt)
+                continue
+            raise SecEdgarError(f"SEC request failed for {url}: {exc}") from exc
+    raise SecEdgarError(f"SEC request failed for {url}: {last_error}")
+
+
+def _section_name(item_number: str) -> str:
+    normalized = item_number.lower()
+    if normalized == "1":
+        return "Business"
+    if normalized == "1a":
+        return "Risk Factors"
+    if normalized == "1b":
+        return "Unresolved Staff Comments"
+    if normalized == "7":
+        return "MD&A"
+    if normalized == "7a":
+        return "Market Risk"
+    if normalized == "8":
+        return "Financial Statements"
+    return "Filing"

@@ -1,3 +1,4 @@
+import re
 from time import perf_counter
 
 from app.api.schemas import ChatRequest, ChatResponse, Metrics, Source, TraceStep
@@ -94,7 +95,12 @@ def _rerank_chunks(query: str, candidates: list[StoredChunk], limit: int) -> lis
     scored: list[tuple[float, StoredChunk]] = []
     for chunk in deduped.values():
         lexical_score = lexical_scores.get(chunk.id, 0.0)
-        combined_score = chunk.score + (lexical_score * 0.15) + _source_intent_bonus(source_intent, chunk)
+        combined_score = (
+            chunk.score
+            + (lexical_score * 0.15)
+            + _source_intent_bonus(source_intent, chunk)
+            + _section_intent_bonus(query, chunk)
+        )
         if combined_score > 0:
             scored.append((combined_score, chunk))
 
@@ -145,6 +151,16 @@ def _source_intent_bonus(source_intent: str | None, chunk: StoredChunk) -> float
     return 0.0
 
 
+def _section_intent_bonus(query: str, chunk: StoredChunk) -> float:
+    lowered_query = query.lower()
+    lowered_citation = (chunk.citation or "").lower()
+    if chunk.source_type == "sec" and "risk" in lowered_query and "risk factors" in lowered_citation:
+        return 0.45
+    if chunk.source_type == "sec" and "risk" in lowered_query and "business" in lowered_citation:
+        return -0.10
+    return 0.0
+
+
 def _select_agent(chunks) -> str:
     source_types = {chunk.source_type for chunk in chunks}
     if source_types == {"policy"}:
@@ -155,6 +171,8 @@ def _select_agent(chunks) -> str:
 
 
 def _compose_grounded_answer(question: str, chunks) -> str:
+    if _is_sec_risk_question(question, chunks):
+        return _compose_sec_risk_answer(question, chunks)
     evidence_items = [f"- {_clean_evidence_text(chunk.text)[:420]}" for chunk in chunks[:3]]
     citations = "\n".join(f"- {chunk.citation}" for chunk in chunks[:3])
     return (
@@ -165,6 +183,73 @@ def _compose_grounded_answer(question: str, chunks) -> str:
         f"## Sources\n"
         f"{citations}"
     )
+
+
+def _compose_sec_risk_answer(question: str, chunks: list[StoredChunk]) -> str:
+    key_risks = _extract_risk_sentences(chunks)
+    if not key_risks:
+        key_risks = [_clean_evidence_text(chunk.text)[:260] for chunk in chunks[:3]]
+
+    risk_items = "\n".join(f"- {risk}" for risk in key_risks[:5])
+    evidence_items = "\n".join(f"- {_clean_evidence_text(chunk.text)[:360]}" for chunk in chunks[:3])
+    citations = "\n".join(f"- {chunk.citation}" for chunk in chunks[:3])
+    return (
+        "## Summary\n"
+        f"Based on the indexed SEC filing evidence, the relevant risk disclosures for '{question}' are summarized below.\n\n"
+        "## Key Risks\n"
+        f"{risk_items}\n\n"
+        "## Evidence\n"
+        f"{evidence_items}\n\n"
+        "## Sources\n"
+        f"{citations}"
+    )
+
+
+def _is_sec_risk_question(question: str, chunks: list[StoredChunk]) -> bool:
+    return "risk" in question.lower() and bool(chunks) and all(chunk.source_type == "sec" for chunk in chunks)
+
+
+def _extract_risk_sentences(chunks: list[StoredChunk]) -> list[str]:
+    risk_terms = {
+        "risk",
+        "risks",
+        "adverse",
+        "uncertain",
+        "uncertainty",
+        "supply",
+        "demand",
+        "tax",
+        "cybersecurity",
+        "competition",
+        "macroeconomic",
+        "regulatory",
+    }
+    selected: list[str] = []
+    seen: set[str] = set()
+    for chunk in chunks:
+        for sentence in _split_sentences(_clean_evidence_text(chunk.text)):
+            lowered = sentence.lower()
+            if not any(term in lowered for term in risk_terms):
+                continue
+            normalized = " ".join(lowered.split())[:160]
+            if normalized in seen:
+                continue
+            seen.add(normalized)
+            selected.append(_truncate_sentence(sentence, 260))
+            if len(selected) >= 5:
+                return selected
+    return selected
+
+
+def _split_sentences(text: str) -> list[str]:
+    return [sentence.strip() for sentence in re.split(r"(?<=[.!?])\s+", text) if len(sentence.strip()) > 40]
+
+
+def _truncate_sentence(sentence: str, limit: int) -> str:
+    compact = " ".join(sentence.split())
+    if len(compact) <= limit:
+        return compact
+    return compact[: limit - 3].rstrip() + "..."
 
 
 def _clean_evidence_text(text: str) -> str:

@@ -10,6 +10,7 @@ from app.api.schemas import (
     MacroSeriesResponse,
 )
 from app.services.config_service import get_config_status
+from app.services.eval_service import run_evaluation_suite
 from app.services.ingestion_service import ingest_policy_documents, ingest_sec_document
 from app.services.rag_service import build_rag_chat_response
 
@@ -58,14 +59,7 @@ def macro_series(series_id: str) -> MacroSeriesResponse:
 
 @router.post("/evals/run")
 def run_evals(request: EvalRunRequest) -> dict[str, object]:
-    return {
-        "status": "completed",
-        "suite": request.suite,
-        "metrics": {
-            "retrieval_recall": None,
-            "faithfulness": None,
-            "latency_ms_p50": None,
-            "estimated_cost_usd": None,
-        },
-        "message": "Evaluation runner placeholder. Add test cases in backend/app/evals.",
-    }
+    try:
+        return run_evaluation_suite(request)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
