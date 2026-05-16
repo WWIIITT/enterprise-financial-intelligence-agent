@@ -99,6 +99,10 @@ def _rerank_chunks(query: str, candidates: list[StoredChunk], limit: int) -> lis
             scored.append((combined_score, chunk))
 
     scored.sort(key=lambda item: item[0], reverse=True)
+    if source_intent:
+        intent_scored = [(score, chunk) for score, chunk in scored if chunk.source_type == source_intent]
+        if intent_scored:
+            scored = intent_scored
     return [
         StoredChunk(
             id=chunk.id,

@@ -122,7 +122,7 @@ Run backend:
 
 ```powershell
 cd backend
-..\.venv\Scripts\python -m uvicorn app.main:app --reload
+..\.venv\Scripts\python -m uvicorn app.main:app
 ```
 
 Backend URL:
@@ -131,11 +131,11 @@ Backend URL:
 http://localhost:8000
 ```
 
-If Windows blocks port `8000` with `[WinError 10013]`, use port `8001`:
+On Windows, use the non-reload command above first. If port `8000` is unavailable, use port `8001`:
 
 ```powershell
 cd backend
-..\.venv\Scripts\python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8001
+..\.venv\Scripts\python -m uvicorn app.main:app --host 127.0.0.1 --port 8001
 ```
 
 Backend fallback URL:
@@ -215,7 +215,7 @@ Keep this terminal open:
 
 ```powershell
 cd backend
-..\.venv\Scripts\python -m uvicorn app.main:app --reload
+..\.venv\Scripts\python -m uvicorn app.main:app
 ```
 
 Backend URL:
@@ -228,7 +228,7 @@ Windows port fallback:
 
 ```powershell
 cd backend
-..\.venv\Scripts\python -m uvicorn app.main:app
+..\.venv\Scripts\python -m uvicorn app.main:app --host 127.0.0.1 --port 8001
 ```
 
 ### 5. Verify backend from a second terminal
@@ -357,7 +357,7 @@ docker compose -f infra\docker-compose.yml up -d
 
 ```powershell
 cd backend
-..\.venv\Scripts\python -m uvicorn app.main:app --reload
+..\.venv\Scripts\python -m uvicorn app.main:app
 ```
 
 4. Ingest policy and SEC sample from the browser, or use PowerShell:
