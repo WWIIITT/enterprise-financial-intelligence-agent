@@ -3,8 +3,8 @@
 ## Current Stage
 
 ```text
-Phase 6: SQL Analytics Agent
-Current stage: Sprint 6 SQL analytics is complete for MVP scope.
+Phase 7: LLMOps / Evaluation Engine
+Current stage: Sprint 7 deterministic evaluation engine is complete for MVP scope.
 ```
 
 Current completion:
@@ -16,6 +16,7 @@ Sprint 3: completed for MVP scope
 Sprint 4: completed for MVP scope
 Sprint 5: completed for MVP scope
 Sprint 6: completed for MVP scope
+Sprint 7: completed for MVP scope
 ```
 
 ## Sprint 1: Project Skeleton + RAG MVP Foundation
@@ -191,19 +192,36 @@ Completed:
 Status:
 
 ```text
-Completed for MVP scope. Next step is Sprint 7 LLMOps / Evaluation.
+Completed for MVP scope.
 ```
 
 ## Sprint 7: LLMOps / Evaluation
 
-- Eval dataset.
-- Retrieval recall.
-- Citation correctness.
-- Faithfulness score.
-- Hallucination checks.
-- Latency tracking.
-- Token / cost tracking.
-- Batch eval report.
+Goal:
+
+```text
+deterministic scoring + evaluation report
+```
+
+Completed:
+
+- Expanded eval case schema.
+- Route accuracy scoring.
+- Source coverage scoring.
+- Citation correctness scoring.
+- Answer term / faithfulness proxy scoring.
+- Hallucination-risk flags.
+- Average and p95 latency summary.
+- `POST /api/evals/report`.
+- Markdown and JSON report output under `data/reports/`.
+- Evaluation run DB records.
+- Frontend eval controls.
+
+Status:
+
+```text
+Completed for MVP scope. Next step is Sprint 8 Security / Governance / Reliability.
+```
 
 ## Sprint 8: Security / Governance / Reliability
 

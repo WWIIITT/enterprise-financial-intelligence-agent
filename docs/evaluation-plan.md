@@ -35,6 +35,19 @@ Evaluation should measure more than whether the answer sounds good. Aurelia Ledg
 - Error rate.
 - Timeout rate.
 
+## Sprint 7 Scoring Definitions
+
+- `pass_rate`: passed cases divided by total cases.
+- `route_accuracy`: share of cases with `expected_agent` that routed to the expected agent.
+- `source_coverage`: share of cases that met required source type or minimum source count checks.
+- `citation_score`: share of required citation terms found in returned source citations.
+- `answer_term_score`: share of required answer terms found in the generated answer.
+- `latency_avg_ms`: average per-case evaluation latency.
+- `latency_p95_ms`: approximate p95 per-case evaluation latency.
+- `hallucination_risk_count`: count of cases containing forbidden answer terms.
+
+Sprint 7 uses deterministic scoring only. It does not use LLM-as-judge.
+
 ## Governance Tests
 
 - PII masking.
@@ -49,6 +62,7 @@ Evaluation should measure more than whether the answer sounds good. Aurelia Ledg
 - `macro-smoke`: FRED/sample macro series, macro routing, and macro citation checks.
 - `orchestrator-smoke`: LangGraph route selection and trace checks.
 - `sql-smoke`: structured financial facts, SQL route, and safe analytics checks.
+- `all`: runs every available deterministic eval case.
 - `rag_factual`: factual questions requiring cited answers.
 - `macro_analysis`: FRED-based macro reasoning.
 - `policy_compliance`: internal policy QA.
@@ -98,3 +112,20 @@ Current checks:
 - SQL answers include ticker and metric context.
 - SQL sources cite SEC Company Facts.
 - Analytics uses predefined query templates rather than raw SQL.
+
+## Evaluation Report
+
+Sprint 7 adds `POST /api/evals/report`.
+
+The report includes:
+
+- Suite summary.
+- Pass rate.
+- Route accuracy.
+- Source coverage.
+- Citation score.
+- Latency summary.
+- Failed cases table.
+- Recommendations.
+
+The latest report is written to `data/reports/evaluation-report.md` and `data/reports/evaluation-report.json` when filesystem writes are available.

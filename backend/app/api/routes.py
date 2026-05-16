@@ -17,7 +17,7 @@ from app.api.schemas import (
 )
 from app.agents.orchestrator import build_orchestrated_chat_response
 from app.services.config_service import get_config_status
-from app.services.eval_service import run_evaluation_suite
+from app.services.eval_service import generate_evaluation_report, run_evaluation_suite
 from app.services.ingestion_service import ingest_policy_documents, ingest_sec_document
 from app.services.macro_service import analyze_macro_context, get_macro_series
 from app.services.sql_analytics_service import analyze_financial_facts, ingest_company_facts
@@ -91,5 +91,13 @@ def sql_analyze(request: SqlAnalyzeRequest) -> SqlAnalyzeResponse:
 def run_evals(request: EvalRunRequest) -> dict[str, object]:
     try:
         return run_evaluation_suite(request)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@router.post("/evals/report")
+def eval_report(request: EvalRunRequest) -> dict[str, object]:
+    try:
+        return generate_evaluation_report(request)
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc

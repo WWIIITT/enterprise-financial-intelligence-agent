@@ -76,3 +76,15 @@ class FinancialFactRecord(Base):
     source: Mapped[str] = mapped_column(String(120), default="SEC Company Facts")
     accession_number: Mapped[str] = mapped_column(String(80), default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class EvaluationRunRecord(Base):
+    __tablename__ = "evaluation_runs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    suite: Mapped[str] = mapped_column(String(80), index=True)
+    cases_total: Mapped[int] = mapped_column(Integer)
+    cases_passed: Mapped[int] = mapped_column(Integer)
+    pass_rate: Mapped[float] = mapped_column(Float)
+    latency_ms: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)

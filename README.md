@@ -22,6 +22,7 @@ This repo currently contains a working Phase 1 / Sprint 1 foundation:
 - Sprint 4 Macro Analysis Agent with FRED/sample macro data.
 - Sprint 5 LangGraph Workflow Orchestrator.
 - Sprint 6 SQL Analytics Agent with SEC Company Facts sample/live ingestion.
+- Sprint 7 deterministic LLMOps / Evaluation Engine.
 - Architecture, roadmap, data source, and evaluation documentation.
 
 The first production-grade target is still:
@@ -613,6 +614,48 @@ Invoke-RestMethod -Method Post http://localhost:8000/api/evals/run `
 
 The browser UI includes a `SQL Analytics` panel for company facts ingestion and metric analysis.
 
+## Sprint 7 Evaluation Runbook
+
+Sprint 7 expands smoke tests into a deterministic Evaluation Engine. It does not use LLM-as-judge and does not add evaluation API cost.
+
+Run all evaluation suites:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/evals/run `
+  -ContentType "application/json" `
+  -Body '{"suite":"all"}'
+```
+
+Generate a markdown and JSON evaluation report:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/evals/report `
+  -ContentType "application/json" `
+  -Body '{"suite":"all"}'
+```
+
+Report output:
+
+```text
+data/reports/evaluation-report.md
+data/reports/evaluation-report.json
+```
+
+Evaluation metrics include:
+
+```text
+pass_rate
+route_accuracy
+source_coverage
+citation_score
+answer_term_score
+latency_avg_ms
+latency_p95_ms
+hallucination_risk_count
+```
+
+The browser UI includes Evaluation controls for suite selection, running evals, and generating the latest report.
+
 ## API
 
 ```text
@@ -626,6 +669,7 @@ GET  /api/macro/series/{series_id}
 POST /api/macro/analyze
 POST /api/sql/analyze
 POST /api/evals/run
+POST /api/evals/report
 ```
 
 Example policy ingestion:

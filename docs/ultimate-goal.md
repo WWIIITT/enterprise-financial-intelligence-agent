@@ -80,7 +80,7 @@ Policy documents:
 
 ## Evaluation Engine
 
-建立 evaluation datasets 和 scoring scripts，用來衡量
+建立 evaluation datasets、scoring scripts 和 report generator，用來衡量
 
 - Retrieval accuracy
 - Answer faithfulness
@@ -89,6 +89,8 @@ Policy documents:
 - Hallucination rate
 - Citation correctness
 - Router accuracy
+- Source coverage
+- Evaluation report quality
 
 ## Observability Dashboard
 
@@ -352,19 +354,22 @@ Completed:
 Status:
 
 ```text
-Planned
+Completed for MVP scope
 ```
 
-Planned:
+Completed:
 
-- Eval dataset expansion
-- Retrieval recall
-- Citation correctness
-- Faithfulness score
-- Hallucination checks
-- Latency tracking
-- Token / cost tracking
-- Batch eval report
+- Expanded eval case schema
+- Route accuracy scoring
+- Source coverage scoring
+- Citation correctness scoring
+- Answer term / faithfulness proxy scoring
+- Hallucination-risk flags
+- Average and p95 latency summary
+- `/api/evals/report`
+- Markdown and JSON report output under `data/reports/`
+- Evaluation run DB records
+- Frontend eval controls
 
 ## Sprint 8: Security / Governance / Reliability
 
@@ -432,6 +437,7 @@ Sprint 3: completed for MVP scope
 Sprint 4: completed for MVP scope
 Sprint 5: completed for MVP scope
 Sprint 6: completed for MVP scope
+Sprint 7: completed for MVP scope
 ```
 
 目前系統能力:
@@ -446,19 +452,21 @@ Sprint 6: completed for MVP scope
 - LangGraph Workflow Orchestrator
 - SQL Analytics Agent
 - SEC Company Facts sample/live ingestion
+- Deterministic Evaluation Engine
+- Markdown / JSON evaluation reports
 - Frontend demo for chat、ingestion、system status、SEC controls、macro controls、SQL controls
 - SEC、macro、orchestrator、SQL smoke evaluation suites
 
 ## 下一個開發步驟
 
 ```text
-Start Sprint 7: LLMOps / Evaluation
+Start Sprint 8: Security / Governance / Reliability
 ```
 
 下一步工作:
 
-1. 擴充 evaluation dataset
-2. 加入 retrieval recall 和 citation correctness scoring
-3. 加入 faithfulness / hallucination checks
-4. 建立 batch eval report
-5. 補 latency 和 cost reporting
+1. 加入 PII masking
+2. 加入 prompt injection detection
+3. 建立 RBAC placeholder
+4. 擴充 audit logs
+5. 定義 human approval path

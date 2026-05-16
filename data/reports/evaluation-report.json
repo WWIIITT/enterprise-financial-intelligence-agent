@@ -1,0 +1,361 @@
+{
+  "status": "completed",
+  "suite": "all",
+  "metrics": {
+    "cases_total": 14,
+    "cases_passed": 12,
+    "pass_rate": 0.8571,
+    "route_accuracy": 0.9,
+    "source_coverage": 1.0,
+    "citation_score": 0.9444,
+    "answer_term_score": 0.9286,
+    "latency_ms": 6916,
+    "latency_avg_ms": 493.57,
+    "latency_p95_ms": 1001,
+    "hallucination_risk_count": 0
+  },
+  "results": [
+    {
+      "id": "sec_aapl_risk_factors",
+      "category": "sec-smoke",
+      "passed": false,
+      "failures": [
+        "citation missing term 10-K"
+      ],
+      "agent": "document-research-agent",
+      "sources_count": 5,
+      "latency_ms": 887,
+      "scores": {
+        "route": 1.0,
+        "source": 1.0,
+        "citation": 0.5,
+        "answer_terms": 1.0,
+        "latency": null,
+        "trace": null
+      },
+      "trace_steps": [
+        "receive",
+        "route",
+        "document_research",
+        "respond"
+      ],
+      "hallucination_risk": false
+    },
+    {
+      "id": "sec_accession_citation",
+      "category": "sec-smoke",
+      "passed": true,
+      "failures": [],
+      "agent": "document-research-agent",
+      "sources_count": 5,
+      "latency_ms": 839,
+      "scores": {
+        "route": 1.0,
+        "source": 1.0,
+        "citation": 1.0,
+        "answer_terms": 1.0,
+        "latency": null,
+        "trace": null
+      },
+      "trace_steps": [
+        "receive",
+        "route",
+        "document_research",
+        "respond"
+      ],
+      "hallucination_risk": false
+    },
+    {
+      "id": "sec_unsupported_claim",
+      "category": "sec-smoke",
+      "passed": false,
+      "failures": [
+        "expected agent rag-orchestrator-low-confidence, got document-research-agent",
+        "answer missing term not contain enough relevant evidence"
+      ],
+      "agent": "document-research-agent",
+      "sources_count": 5,
+      "latency_ms": 809,
+      "scores": {
+        "route": 0.0,
+        "source": null,
+        "citation": null,
+        "answer_terms": 0.0,
+        "latency": null,
+        "trace": null
+      },
+      "trace_steps": [
+        "receive",
+        "route",
+        "document_research",
+        "respond"
+      ],
+      "hallucination_risk": false
+    },
+    {
+      "id": "macro-inflation-route",
+      "category": "macro-smoke",
+      "passed": true,
+      "failures": [],
+      "agent": "macro-analysis-agent",
+      "sources_count": 1,
+      "latency_ms": 65,
+      "scores": {
+        "route": 1.0,
+        "source": 1.0,
+        "citation": 1.0,
+        "answer_terms": 1.0,
+        "latency": null,
+        "trace": null
+      },
+      "trace_steps": [
+        "receive",
+        "route",
+        "macro_analysis",
+        "respond"
+      ],
+      "hallucination_risk": false
+    },
+    {
+      "id": "macro-apple-rate-linkage",
+      "category": "macro-smoke",
+      "passed": true,
+      "failures": [],
+      "agent": "macro-document-orchestrator",
+      "sources_count": 5,
+      "latency_ms": 1110,
+      "scores": {
+        "route": null,
+        "source": 1.0,
+        "citation": 1.0,
+        "answer_terms": 1.0,
+        "latency": null,
+        "trace": null
+      },
+      "trace_steps": [
+        "receive",
+        "route",
+        "synthesize",
+        "respond"
+      ],
+      "hallucination_risk": false
+    },
+    {
+      "id": "macro-unemployment-series",
+      "category": "macro-smoke",
+      "passed": true,
+      "failures": [],
+      "agent": "macro-analysis-agent",
+      "sources_count": 1,
+      "latency_ms": 61,
+      "scores": {
+        "route": 1.0,
+        "source": 1.0,
+        "citation": 1.0,
+        "answer_terms": 1.0,
+        "latency": null,
+        "trace": null
+      },
+      "trace_steps": [
+        "receive",
+        "route",
+        "macro_analysis",
+        "respond"
+      ],
+      "hallucination_risk": false
+    },
+    {
+      "id": "orchestrator-policy-route",
+      "category": "orchestrator-smoke",
+      "passed": true,
+      "failures": [],
+      "agent": "policy-compliance-agent",
+      "sources_count": 5,
+      "latency_ms": 716,
+      "scores": {
+        "route": null,
+        "source": null,
+        "citation": null,
+        "answer_terms": 1.0,
+        "latency": null,
+        "trace": null
+      },
+      "trace_steps": [
+        "receive",
+        "route",
+        "policy_compliance",
+        "respond"
+      ],
+      "hallucination_risk": false
+    },
+    {
+      "id": "orchestrator-document-route",
+      "category": "orchestrator-smoke",
+      "passed": true,
+      "failures": [],
+      "agent": "document-research-agent",
+      "sources_count": 5,
+      "latency_ms": 586,
+      "scores": {
+        "route": null,
+        "source": null,
+        "citation": null,
+        "answer_terms": 1.0,
+        "latency": null,
+        "trace": null
+      },
+      "trace_steps": [
+        "receive",
+        "route",
+        "document_research",
+        "respond"
+      ],
+      "hallucination_risk": false
+    },
+    {
+      "id": "orchestrator-macro-route",
+      "category": "orchestrator-smoke",
+      "passed": true,
+      "failures": [],
+      "agent": "macro-analysis-agent",
+      "sources_count": 1,
+      "latency_ms": 40,
+      "scores": {
+        "route": 1.0,
+        "source": 1.0,
+        "citation": 1.0,
+        "answer_terms": 1.0,
+        "latency": null,
+        "trace": null
+      },
+      "trace_steps": [
+        "receive",
+        "route",
+        "macro_analysis",
+        "respond"
+      ],
+      "hallucination_risk": false
+    },
+    {
+      "id": "orchestrator-macro-document-route",
+      "category": "orchestrator-smoke",
+      "passed": true,
+      "failures": [],
+      "agent": "macro-document-orchestrator",
+      "sources_count": 5,
+      "latency_ms": 1001,
+      "scores": {
+        "route": 1.0,
+        "source": 1.0,
+        "citation": 1.0,
+        "answer_terms": 1.0,
+        "latency": null,
+        "trace": null
+      },
+      "trace_steps": [
+        "receive",
+        "route",
+        "synthesize",
+        "respond"
+      ],
+      "hallucination_risk": false
+    },
+    {
+      "id": "orchestrator-fallback-route",
+      "category": "orchestrator-smoke",
+      "passed": true,
+      "failures": [],
+      "agent": "document-research-agent",
+      "sources_count": 5,
+      "latency_ms": 664,
+      "scores": {
+        "route": null,
+        "source": null,
+        "citation": null,
+        "answer_terms": 1.0,
+        "latency": null,
+        "trace": null
+      },
+      "trace_steps": [
+        "receive",
+        "route",
+        "fallback",
+        "respond"
+      ],
+      "hallucination_risk": false
+    },
+    {
+      "id": "orchestrator-sql-route",
+      "category": "orchestrator-smoke",
+      "passed": true,
+      "failures": [],
+      "agent": "sql-analytics-agent",
+      "sources_count": 3,
+      "latency_ms": 30,
+      "scores": {
+        "route": 1.0,
+        "source": 1.0,
+        "citation": null,
+        "answer_terms": 1.0,
+        "latency": null,
+        "trace": null
+      },
+      "trace_steps": [
+        "receive",
+        "route",
+        "sql_analytics",
+        "respond"
+      ],
+      "hallucination_risk": false
+    },
+    {
+      "id": "sql-revenue-route",
+      "category": "sql-smoke",
+      "passed": true,
+      "failures": [],
+      "agent": "sql-analytics-agent",
+      "sources_count": 3,
+      "latency_ms": 63,
+      "scores": {
+        "route": 1.0,
+        "source": 1.0,
+        "citation": 1.0,
+        "answer_terms": 1.0,
+        "latency": null,
+        "trace": null
+      },
+      "trace_steps": [
+        "receive",
+        "route",
+        "sql_analytics",
+        "respond"
+      ],
+      "hallucination_risk": false
+    },
+    {
+      "id": "sql-net-income-route",
+      "category": "sql-smoke",
+      "passed": true,
+      "failures": [],
+      "agent": "sql-analytics-agent",
+      "sources_count": 3,
+      "latency_ms": 39,
+      "scores": {
+        "route": 1.0,
+        "source": 1.0,
+        "citation": 1.0,
+        "answer_terms": 1.0,
+        "latency": null,
+        "trace": null
+      },
+      "trace_steps": [
+        "receive",
+        "route",
+        "sql_analytics",
+        "respond"
+      ],
+      "hallucination_risk": false
+    }
+  ],
+  "message": "Evaluation suite completed with deterministic route, citation, source, and answer checks."
+}

@@ -45,6 +45,7 @@ The repo currently implements the core MVP foundation:
 - Safe SQL Analytics Agent with predefined query templates.
 - LangGraph deterministic workflow orchestration.
 - Evaluation suites for SEC, macro, orchestrator, and SQL routing.
+- Deterministic Evaluation Engine with markdown/json reports.
 
 The in-memory store remains only as a local development guard. Qdrant is the primary vector retrieval backend when configured.
 
@@ -68,6 +69,26 @@ respond with answer, sources, route trace, and metrics
 ```
 
 Routing is deterministic in Sprint 5 to avoid extra LLM cost and keep evaluation repeatable.
+
+## Evaluation Engine Flow
+
+```text
+/api/evals/run or /api/evals/report
+  |
+load JSON eval fixtures
+  |
+execute cases through LangGraph orchestrator
+  |
+score route, sources, citations, answer terms, latency, and forbidden terms
+  |
+record evaluation run in PostgreSQL when available
+  |
+return structured metrics
+  |
+optional report writer -> data/reports/evaluation-report.md/json
+```
+
+Sprint 7 uses deterministic scoring only. LLM-as-judge is intentionally out of scope for the MVP.
 
 ## Target Data Flow
 

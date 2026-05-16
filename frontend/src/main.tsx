@@ -106,6 +106,36 @@ type SqlAnalyzeResponse = {
   metrics: Metrics;
 };
 
+type EvalSummary = {
+  cases_total: number;
+  cases_passed: number;
+  pass_rate: number;
+  route_accuracy: number;
+  source_coverage: number;
+  citation_score: number;
+  answer_term_score: number;
+  latency_ms: number;
+  latency_avg_ms: number;
+  latency_p95_ms: number;
+  hallucination_risk_count: number;
+};
+
+type EvalRunResponse = {
+  status: string;
+  suite: string;
+  metrics: EvalSummary;
+  results: Array<{ id: string; passed: boolean; agent: string; sources_count: number }>;
+  message: string;
+};
+
+type EvalReportResponse = {
+  status: string;
+  suite: string;
+  summary: EvalSummary;
+  markdown: string;
+  report_paths: { markdown: string; json: string };
+};
+
 const dataSources = ["SEC EDGAR", "FRED", "Internal Policies", "PostgreSQL", "Qdrant"];
 const macroSeriesOptions = [
   { id: "FEDFUNDS", label: "Fed Funds" },
@@ -141,6 +171,10 @@ function App() {
   const [sqlLoading, setSqlLoading] = useState<"ingest" | "analysis" | null>(null);
   const [sqlIngestResult, setSqlIngestResult] = useState<CompanyFactsIngestResponse | null>(null);
   const [sqlAnalysis, setSqlAnalysis] = useState<SqlAnalyzeResponse | null>(null);
+  const [evalSuite, setEvalSuite] = useState("all");
+  const [evalLoading, setEvalLoading] = useState<"run" | "report" | null>(null);
+  const [evalSummary, setEvalSummary] = useState<EvalSummary | null>(null);
+  const [evalReportPath, setEvalReportPath] = useState("");
 
   useEffect(() => {
     void loadConfigStatus();
@@ -361,6 +395,50 @@ function App() {
     }
   }
 
+  async function runEvaluation() {
+    setEvalLoading("run");
+    setError("");
+    try {
+      const apiResponse = await fetch("/api/evals/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ suite: evalSuite })
+      });
+      if (!apiResponse.ok) {
+        throw new Error(`Evaluation failed with status ${apiResponse.status}`);
+      }
+      const body = (await apiResponse.json()) as EvalRunResponse;
+      setEvalSummary(body.metrics);
+      setEvalReportPath("");
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Unable to run evaluation.");
+    } finally {
+      setEvalLoading(null);
+    }
+  }
+
+  async function generateEvaluationReport() {
+    setEvalLoading("report");
+    setError("");
+    try {
+      const apiResponse = await fetch("/api/evals/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ suite: evalSuite })
+      });
+      if (!apiResponse.ok) {
+        throw new Error(`Evaluation report failed with status ${apiResponse.status}`);
+      }
+      const body = (await apiResponse.json()) as EvalReportResponse;
+      setEvalSummary(body.summary);
+      setEvalReportPath(body.report_paths.markdown);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Unable to generate evaluation report.");
+    } finally {
+      setEvalLoading(null);
+    }
+  }
+
   const traceSteps = response?.trace ?? [
     { step: "receive", detail: "Waiting for a user question." },
     { step: "route", detail: "The backend will retrieve indexed policy or SEC evidence." },
@@ -529,11 +607,42 @@ function App() {
               <Activity size={20} />
               <h3>Evaluation / Monitoring</h3>
             </div>
+            <div className="macro-controls">
+              <label>
+                <span>Suite</span>
+                <select value={evalSuite} onChange={(event) => setEvalSuite(event.target.value)}>
+                  <option value="all">All</option>
+                  <option value="sec-smoke">SEC Smoke</option>
+                  <option value="macro-smoke">Macro Smoke</option>
+                  <option value="orchestrator-smoke">Orchestrator Smoke</option>
+                  <option value="sql-smoke">SQL Smoke</option>
+                </select>
+              </label>
+              <button className="secondary-button" type="button" onClick={runEvaluation} disabled={evalLoading !== null}>
+                {evalLoading === "run" ? <Loader2 className="spin" size={18} /> : <PlayCircle size={18} />}
+                Run Eval
+              </button>
+              <button className="secondary-button" type="button" onClick={generateEvaluationReport} disabled={evalLoading !== null}>
+                {evalLoading === "report" ? <Loader2 className="spin" size={18} /> : <PlayCircle size={18} />}
+                Generate Report
+              </button>
+            </div>
             <dl className="metric-list">
               <div><dt>Latency</dt><dd>{response ? `${response.metrics.latency_ms} ms` : "waiting"}</dd></div>
               <div><dt>Token Cost</dt><dd>{response ? `$${response.metrics.estimated_cost_usd.toFixed(4)}` : "waiting"}</dd></div>
               <div><dt>Sources</dt><dd>{response ? response.sources.length : "waiting"}</dd></div>
+              <div><dt>Eval Pass Rate</dt><dd>{evalSummary ? `${Math.round(evalSummary.pass_rate * 100)}%` : "waiting"}</dd></div>
+              <div><dt>Route Accuracy</dt><dd>{evalSummary ? `${Math.round(evalSummary.route_accuracy * 100)}%` : "waiting"}</dd></div>
+              <div><dt>Citation Score</dt><dd>{evalSummary ? `${Math.round(evalSummary.citation_score * 100)}%` : "waiting"}</dd></div>
+              <div><dt>P95 Latency</dt><dd>{evalSummary ? `${evalSummary.latency_p95_ms} ms` : "waiting"}</dd></div>
             </dl>
+            {evalReportPath ? (
+              <div className="macro-result">
+                <strong>Evaluation Report</strong>
+                <span>{evalReportPath}</span>
+                <small>{evalSummary?.cases_passed} / {evalSummary?.cases_total} cases passed</small>
+              </div>
+            ) : null}
           </article>
 
           <article id="macro" className="panel">
